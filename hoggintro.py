@@ -8,9 +8,9 @@ from pylab import *
 from scipy import *
 import matplotlib.pyplot as plt
 
-plateid=input("Plate ID: ")
-mjd=input("mjd: ")
-fiber=input("fiber: ")
+plateid=input("Plate ID (e.g. 276): ")
+mjd=input("mjd (e.g. 51909): ")
+fiber=input("fiber (e.g. 627): ")
 
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiber)+'&mjd='+str(mjd)+'"')
 
