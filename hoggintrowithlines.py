@@ -43,7 +43,7 @@ def __main__():
    # plt.vlines(#insert x, ymin, ymax, color='k', linestyles='solid'
     plt.xlabel('Wavelength [Angstroms]')
     plt.ylabel('Flux [10^-17 erg/cm^2/s/Angstrom]')
-    #savefig(str(plateid).zfill(4)+'-'+str(mjd)+'-'+str(fiber).zfill(4)+'.png')
+    savefig(str(plateid).zfill(4)+'-'+str(mjd)+'-'+str(fiber).zfill(4)+'_lines.png')
     show()
     
 __main__()
