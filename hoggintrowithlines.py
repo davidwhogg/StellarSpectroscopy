@@ -46,5 +46,6 @@ def __main__():
     savefig(str(plateid).zfill(4)+'-'+str(mjd)+'-'+str(fiber).zfill(4)+'_lines.png')
     show()
     
+    
 __main__()
     
