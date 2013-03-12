@@ -31,22 +31,6 @@ def __main__():
 
     taba=[tab1a,tab2a,tab3a,tab4a,tab5a,tab6a,tab7a,tab8a] #tabarray for simpler coding
 
-    tab1b=tab1a[1].data
-    tab1c=tab1a[3].data
-    tab2b=tab2a[1].data
-    tab2c=tab2a[3].data
-    tab3b=tab3a[1].data
-    tab3c=tab3a[3].data
-    tab4b=tab4a[1].data
-    tab4c=tab4a[3].data
-    tab5b=tab5a[1].data
-    tab5c=tab5a[3].data
-    tab6b=tab6a[1].data
-    tab6c=tab6a[3].data
-    tab7b=tab7a[1].data
-    tab7c=tab7a[3].data
-    tab8b=tab8a[1].data
-    tab8c=tab8a[3].data
     for i in range(0,8):
         z=taba[i][3].data.field(5)
         z=[x for x in z if x!=0] #remove nonzero options
