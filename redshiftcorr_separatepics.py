@@ -8,7 +8,7 @@ from pylab import *
 from scipy import *
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
-'''
+
 #If you want to download all the spectra use below code
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2231&fiber=10&mjd=53816"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2236&fiber=16&mjd=53729"')
@@ -18,7 +18,7 @@ commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?pl
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=3253&fiber=20&mjd=54941"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2151&fiber=9&mjd=54523"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2251&fiber=3&mjd=53557"')
-'''
+
 def __main__():
     tab1a = pyfits.open(commands.getoutput("pwd")+'/spec-2231-53816-0010.fits')
     tab2a = pyfits.open(commands.getoutput("pwd")+'/spec-2236-53729-0016.fits')
@@ -32,10 +32,16 @@ def __main__():
     taba=[tab1a,tab2a,tab3a,tab4a,tab5a,tab6a,tab7a,tab8a] #tabarray for simpler coding
 
     for i in range(0,8):
-        z=taba[i][3].data.field(5)
-        z=[x for x in z if x!=0] #remove nonzero options
-        zm=mean(z)
+        if type(taba[i][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
+            zm= taba[i][2].data.field(63)[0]
+            print i, "63"            
+        elif type(taba[i][2].data.field(37)[0])==float32:
+            zm=	taba[i][2].data.field(37)[0]
+            print i, "37"
+        else:
+            print "error"
 
+    
         flux=taba[i][1].data.field(0)
         loglam=taba[i][1].data.field(1)
         lam=10**loglam
@@ -43,7 +49,7 @@ def __main__():
         #ivar=taba[i][1].data.field(2)
 
         axvline(x=6563, linewidth=2, color='r') #alpha Balmer line
-        axvline(x=4861, linewidth=2, color='r')
+        axvline(x=4862, linewidth=2, color='r')
         #axvline(x=4341, linewidth=2, color='r')
         #axvline(x=4102, linewidth=2, color='r')
         #axvline(x=3970, linewidth=2, color='r')
@@ -67,11 +73,11 @@ def __main__():
             lamcora[j]=float(lam[j])/float((1-zm))
     
         print zm,i
-        plt.plot(lamcora,flux, color='g', label='corrected in wrong direction') #plot mis-corrected lambda
+        plt.step(lamcora,flux, color='g', label='corrected in wrong direction') #plot mis-corrected lambda
    
-        plt.plot(lamcor,flux, color='b', label='corrected') #plot corrected lambda
+        plt.step(lamcor,flux, color='b', label='corrected') #plot corrected lambda
     
-        plt.plot(lam,flux, color='k',label='uncorrected') #plot uncorrected lambda
+        plt.step(lam,flux, color='k',label='uncorrected') #plot uncorrected lambda
         
         #plt.step(lamcor,flux+(2*sd), color='blue')
         #plt.step(lamcor,flux-(2*sd), color='yellow')
@@ -88,6 +94,6 @@ def __main__():
         plt.ylabel('Flux [10^-17 erg/cm^2/s/Angstrom]')
         
         plt.legend(bbox_to_anchor=(1,1), loc=1, borderaxespad=0.)
-        #show()
+        show()
 
 __main__()
