@@ -8,7 +8,7 @@ from pylab import *
 from scipy import *
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
-
+'''
 #If you want to download all the spectra use below code
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2231&fiber=10&mjd=53816"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2236&fiber=16&mjd=53729"')
@@ -18,7 +18,7 @@ commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?pl
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=3253&fiber=20&mjd=54941"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2151&fiber=9&mjd=54523"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2251&fiber=3&mjd=53557"')
-
+'''
 def __main__():
     tab1a = pyfits.open(commands.getoutput("pwd")+'/spec-2231-53816-0010.fits')
     tab2a = pyfits.open(commands.getoutput("pwd")+'/spec-2236-53729-0016.fits')
@@ -41,7 +41,7 @@ def __main__():
         else:
             print "error"
 
-    
+        temp=taba[i][2].data.field(106)[0]
         flux=taba[i][1].data.field(0)
         loglam=taba[i][1].data.field(1)
         lam=10**loglam
