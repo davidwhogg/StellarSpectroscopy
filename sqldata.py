@@ -13,8 +13,16 @@ teff=[]
 feh=[]
 extinction=[]
 names=[]
+fiber=[]
+mjd=[]
+plate=[]
+camcol=[]
+run=[]
+ids=[]
+
 alldata= sqlcl.query("SELECT top 1000 p.objID, \
-p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject \
+p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
+p.obj, s.plate, s.fiberID, s.mjd\
 FROM PhotoObj AS p \
 JOIN SpecObj as s ON s.specobjID=p.specobjID \
 WHERE psfMag_r<19  \
@@ -39,15 +47,28 @@ power(psfMag_r-psfMag_i-0.09,2)+\
 power(psfMag_i-psfMag_z-0.02,2)))<0.08").read()
 interim=alldata.replace("\n",",")
 compiled=interim.split(",")
-for i in range(6,len(compiled)-1,5):
+for i in range(12,len(compiled)-1,11):
     extinction.append(compiled[i])
-for i in range(7,len(compiled)-1,5):
+for i in range(13,len(compiled)-1,11):
     teff.append(compiled[i])
-for i in range(8,len(compiled)-1,5):
+for i in range(14,len(compiled)-1,11):
     feh.append(compiled[i])
-for i in range(9,len(compiled)-1,5):
+for i in range(15,len(compiled)-1,11):
     names.append(compiled[i])
-for i in range(5,len(compiled)-1,5):
+for i in range(11,len(compiled)-1,11):
     objid.append(compiled[i])
+    
+for i in range(16,len(compiled)-1,11):
+    camcol.append(compiled[i])
+for i in range(17,len(compiled)-1,11):
+    run.append(compiled[i])
+for i in range(18,len(compiled)-1,11):
+    ids.append(compiled[i])
+for i in range(19,len(compiled)-1,11):
+    plate.append(compiled[i])
+for i in range(20,len(compiled)-1,11):
+    fiber.append(compiled[i])
+for i in range(21,len(compiled)-1,11):
+    mjd.append(compiled[i])
 
 plt.show()
