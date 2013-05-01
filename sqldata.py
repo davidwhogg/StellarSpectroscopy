@@ -22,10 +22,18 @@ plate=[]
 camcol=[]
 run=[]
 ids=[]
+ras=[]
+decs=[]
+magu=[]
+magg=[]
+magi=[]
+magr=[]
+magz=[]
 
 alldata= sqlcl.query("SELECT top 10 p.objID, \
 p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
-p.obj, s.plate, s.fiberID, s.mjd \
+p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
+p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
 FROM PhotoObj AS p \
 JOIN SpecObj as s ON s.specobjID=p.specobjID \
 WHERE psfMag_r<19  \
@@ -50,33 +58,48 @@ power(psfMag_r-psfMag_i-0.09,2)+\
 power(psfMag_i-psfMag_z-0.02,2)))<0.08").read()
 interim=alldata.replace("\n",",")
 compiled=interim.split(",")
-for i in range(13,len(compiled)-1,12):
+for i in range(20,len(compiled)-1,19):
     extinction.append(compiled[i])
-for i in range(14,len(compiled)-1,12):
+for i in range(21,len(compiled)-1,19):
     teff.append(compiled[i])
-for i in range(15,len(compiled)-1,12):
+for i in range(22,len(compiled)-1,19):
     feh.append(compiled[i])
-for i in range(16,len(compiled)-1,12):
+for i in range(23,len(compiled)-1,19):
     names.append(compiled[i])
-for i in range(17,len(compiled)-1,12):
+for i in range(24,len(compiled)-1,19):
     objid.append(compiled[i])
-    
-for i in range(18,len(compiled)-1,12):
+for i in range(25,len(compiled)-1,19):
     camcol.append(compiled[i])
-for i in range(19,len(compiled)-1,12):
+for i in range(26,len(compiled)-1,19):
     run.append(compiled[i])
-for i in range(20,len(compiled)-1,12):
+for i in range(27,len(compiled)-1,19):
     ids.append(compiled[i])
-for i in range(21,len(compiled)-1,12):
+for i in range(28,len(compiled)-1,19):
     plate.append(compiled[i])
-for i in range(22,len(compiled)-1,12):
+for i in range(29,len(compiled)-1,19):
     fiber.append(compiled[i])
-for i in range(23,len(compiled)-1,12):
+for i in range(30,len(compiled)-1,19):
     mjd.append(compiled[i])
+for i in range(31,len(compiled)-1,19):
+    ras.append(compiled[i])
+for i in range(32,len(compiled)-1,19):
+    decs.append(compiled[i])
 
+for i in range(33,len(compiled)-1,19):
+    magu.append(compiled[i])
+for i in range(34,len(compiled)-1,19):
+    magg.append(compiled[i])
+for i in range(35,len(compiled)-1,19):
+    magr.append(compiled[i])
+for i in range(36,len(compiled)-1,19):
+    magi.append(compiled[i])
+for i in range(37,len(compiled)-1,19):
+    magz.append(compiled[i])
+    
 tabs=[] #this will contain each fits file in one super-array
 fluxes=[]
 sn2s=[]
+errormags
 
 for i in range(len(camcol)):
     plateid=plate[i]
@@ -91,3 +114,6 @@ for i in range(len(camcol)):
     sn2=tabs[i][2].data.field(6)[0]+tabs[i][2].data.field(7)[0] #one of these entries is 0 always
     sn2s.append(sn2)
     errormag=1/sn2
+    errormags.append(errormag)
+
+
