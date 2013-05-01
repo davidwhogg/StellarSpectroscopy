@@ -75,6 +75,8 @@ for i in range(23,len(compiled)-1,12):
     mjd.append(compiled[i])
 
 tabs=[] #this will contain each fits file in one super-array
+fluxes=[]
+sn2s=[]
 
 for i in range(len(camcol)):
     plateid=plate[i]
@@ -84,4 +86,8 @@ for i in range(len(camcol)):
     
     tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+plateid.zfill(4)+'-'+mjdid+'-'+fiberid.zfill(4)+'.fits')
     tabs.append(tab)
-    
+    flux=tabs[i][1].data.field(0) #flux
+    fluxes.append(flux)
+    sn2=tabs[i][2].data.field(6)[0]+tabs[i][2].data.field(7)[0] #one of these entries is 0 always
+    sn2s.append(sn2)
+    errormag=1/sn2
