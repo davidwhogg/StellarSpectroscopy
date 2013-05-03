@@ -1,19 +1,15 @@
+import numpy as np
+import os
+from pylab import *
 
-def __main__():
-    import matplotlib
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import os
-    from pylab import *
-
-    import commands
-    import pyfits
-    import sys
-    directory=commands.getoutput("pwd")
-    sys.path.append(directory)
-    import sqlcl
-
-
+import commands
+import pyfits
+import sys
+os.chdir("/Users/admin/Desktop/Maser files")
+directory=commands.getoutput("pwd")
+sys.path.append(directory)
+import sqlcl
+def sqldata(n):
     objids=[] #this one is left empty, ignore
 
     objs=[] #8
@@ -31,14 +27,14 @@ def __main__():
     decs=[] #13
     magu=[] #14
     magg=[]#15
-    magi=[] #16
-    magr=[] #17
+    magr=[] #16
+    magi=[] #17
     magz=[] #18
 
     array1=[objids,extinction,teff,feh,names,camcol,run,ids,objs,plate,fiber,mjd,\
             ras,decs,magu,magg,magr,magi,magz]
 
-    alldata= sqlcl.query("SELECT top 10 p.objID, \
+    alldata= sqlcl.query("SELECT top 1000 p.objID, \
     p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
     p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
     p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
@@ -67,42 +63,42 @@ def __main__():
     interim=alldata.replace("\n",",")
     compiled=interim.split(",")
     for i in range(20,len(compiled)-1,19):
-        extinction.append(compiled[i])
+        extinction.append(float(compiled[i]))
     for i in range(21,len(compiled)-1,19):
-        teff.append(compiled[i])
+        teff.append(float(compiled[i]))
     for i in range(22,len(compiled)-1,19):
-        feh.append(compiled[i])
+        feh.append(float(compiled[i]))
     for i in range(23,len(compiled)-1,19):
-        names.append(compiled[i])
+        names.append((compiled[i]))
     for i in range(24,len(compiled)-1,19):
-        objs.append(compiled[i])
+        objs.append(float(compiled[i]))
     for i in range(25,len(compiled)-1,19):
-        camcol.append(compiled[i])
+        camcol.append(float(compiled[i]))
     for i in range(26,len(compiled)-1,19):
-        run.append(compiled[i])
+        run.append(int(compiled[i]))
     for i in range(27,len(compiled)-1,19):
-        ids.append(compiled[i])
+        ids.append(int(compiled[i]))
     for i in range(28,len(compiled)-1,19):
-        plate.append(compiled[i])
+        plate.append(int(compiled[i]))
     for i in range(29,len(compiled)-1,19):
-        fiber.append(compiled[i])
+        fiber.append(int(compiled[i]))
     for i in range(30,len(compiled)-1,19):
-        mjd.append(compiled[i])
+        mjd.append(int(compiled[i]))
     for i in range(31,len(compiled)-1,19):
-        ras.append(compiled[i])
+        ras.append(float(compiled[i]))
     for i in range(32,len(compiled)-1,19):
-        decs.append(compiled[i])
+        decs.append(float(compiled[i]))
     for i in range(33,len(compiled)-1,19):
-        magu.append(compiled[i])
+        magu.append(float(compiled[i]))
     for i in range(34,len(compiled)-1,19):
-        magg.append(compiled[i])
+        magg.append(float(compiled[i]))
     for i in range(35,len(compiled)-1,19):
-        magr.append(compiled[i])
+        magr.append(float(compiled[i]))
     for i in range(36,len(compiled)-1,19):
-        magi.append(compiled[i])
+        magi.append(float(compiled[i]))
     for i in range(37,len(compiled)-1,19):
-        magz.append(compiled[i])
-        
+        magz.append(float(compiled[i]))
+        '''
     tabs=[] #this will contain each fits file in one super-array
     fluxes=[]
     sn2s=[]
@@ -121,7 +117,6 @@ def __main__():
         sn2=tabs[i][2].data.field(6)[0]+tabs[i][2].data.field(7)[0] #one of these entries is 0 always
         sn2s.append(sn2)
         errormag=1/sn2
-        errormags.append(errormag)
-
-__main__()
+        errormags.append(errormag)'''
+    return array1
 
