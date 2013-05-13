@@ -9,7 +9,7 @@ from scipy import *
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 '''
-#If you want to download all the spectra use below code
+If you want to download all the spectra use below code
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2231&fiber=10&mjd=53816"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2236&fiber=16&mjd=53729"')
 commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate=2236&fiber=5&mjd=53729"')
