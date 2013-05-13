@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+##!/usr/bin/python2
 """>> sqlcl << command line query tool by Tamas Budavari <budavari@jhu.edu>
 Usage: sqlcl [options] sqlfile(s)
 
