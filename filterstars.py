@@ -7,7 +7,7 @@ def __main__():
 #    sys.path.append(directory)
     import sqlcl
 
-    alldata= sqlcl.query("SELECT top 1000 p.objID, s.elodieObject, \
+    alldata= sqlcl.query("SELECT top 10000 p.objID, s.elodieObject, \
     p.extinction_g, s.elodieTEff, s.elodieFeH \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
