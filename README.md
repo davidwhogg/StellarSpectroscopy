@@ -1,6 +1,10 @@
 StellarSpectroscopy
 ===================
 
+Quick summary:
+-------------
+**sqlcl.py** should be downloaded if it's not on the computer already. Otherwise, run **graphcode.py** (which will import **sqldata_notmain.py**) and it will produce the graph of two particular variables & a particular spectrum at a particular data point.
+
 Explanation of code:
 -------------------
 * **filterstars.py** : This filters for the calibration star using a SQL query embedded within the python script.
