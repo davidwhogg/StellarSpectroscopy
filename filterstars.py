@@ -1,4 +1,3 @@
-
 def __main__():
 
 #    import sys
@@ -31,7 +30,7 @@ def __main__():
     and sqrt((power(psfMag_u-psfmag_g-0.82,2)+ \
     power(psfMag_g-psfMag_r-0.3,2)+ \
     power(psfMag_r-psfMag_i-0.09,2)+\
-    power(psfMag_i-psfMag_z-0.02,2)))<0.08").read()
+    power(psfMag_i-psfMag_z-0.02,2)))<0.20").read()
 
     # filters for calibration stars taken from
     # http://www.sdss3.org/dr9/algorithms/boss_std_ts.php
