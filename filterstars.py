@@ -1,5 +1,4 @@
 
-
 def __main__():
 
 #    import sys
@@ -7,13 +6,15 @@ def __main__():
 #    sys.path.append(directory)
     import sqlcl
 
-    alldata= sqlcl.query("SELECT top 10000 p.objID, s.elodieObject, \
-    p.extinction_g, s.elodieTEff, s.elodieFeH \
+    alldata=  sqlcl.query("SELECT top 10000 p.objID, \
+    p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
+    p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
+    p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
-    WHERE psfMag_r<19  \
+    WHERE psfMag_r<19 \
     and psfMag_r>15 and type=6 \
-    and  dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
+    and dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
     and calibStatus_r=1 \
     and s.elodieTEff!=0 and s.elodieFeH!=0 and s.elodieLogG!=0 \
     and ((flags&dbo.fPhotoFlags('BLENDED')) \
