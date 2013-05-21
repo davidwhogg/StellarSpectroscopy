@@ -8,7 +8,7 @@ def __main__():
     alldata=  sqlcl.query("SELECT top 10000 p.objID, \
     p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
     p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
-    p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
+    p.psfMag_u, p.psfMag_g, p.psfMag_r, p.psfMag_i, p.psfMag_z \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
     WHERE psfMag_r<19 \
