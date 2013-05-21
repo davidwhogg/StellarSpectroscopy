@@ -35,7 +35,7 @@ def sqldata(n):
             ras,decs,magu,magg,magr,magi,magz]
 
 
-    alldata= sqlcl.query("SELECT top 10000 p.objID, \
+    alldata= sqlcl.query("SELECT p.objID, \
     p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
     p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
     p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
@@ -60,7 +60,7 @@ def sqldata(n):
     and sqrt((power(psfMag_u-psfmag_g-0.82,2)+ \
     power(psfMag_g-psfMag_r-0.3,2)+ \
     power(psfMag_r-psfMag_i-0.09,2)+\
-    power(psfMag_i-psfMag_z-0.02,2)))<0.08").read()
+    power(psfMag_i-psfMag_z-0.02,2)))<0.20").read()
     interim=alldata.replace("\n",",")
     compiled=interim.split(",")
     for i in range(20,len(compiled)-1,19):
