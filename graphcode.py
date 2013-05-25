@@ -57,7 +57,7 @@ plt.ylabel("r-i")
 
 ##### SPLINE
 s = UnivariateSpline(wls, fluxes, k=3, s=0)
-xs=linspace(min(wls),max(wls),len(wls)*10)
+xs=np.linspace(min(wls),max(wls),len(wls)*10)
 ys=s(xs)
 
 #below section graphs the spectrum
