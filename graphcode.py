@@ -55,20 +55,26 @@ plt.scatter(maggr,magri,s=sa, c=ca, marker="o", alpha=0.1, edgecolors = 'none')
 plt.xlabel("g-r")
 plt.ylabel("r-i")
 
+##### SPLINE
+s = UnivariateSpline(wls, fluxes, k=3, s=0)
+xs=linspace(min(wls),max(wls),len(wls)*10)
+ys=s(xs)
+
 #below section graphs the spectrum
-'''
-plt.subplot(212)
+
+plt.subplot(211)
+plt.step(xs,ys)
+plt.xlabel("wavelengths (A)")
+plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
+fig = plt.gcf()
+fig.set_size_inches(6,3)
+
+plt.subplot(313)
 plt.step(wls,fluxes)
 plt.xlabel("wavelengths (A)")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 fig = plt.gcf()
 fig.set_size_inches(6,3)
-'''
-
-
-##### SPLINE
-#s1 = UnivariateSpline(lamcor1, flux1, k=3) #these names are not defined
-#plot wl, s1
 
  
 #####
