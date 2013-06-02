@@ -48,7 +48,7 @@ magri=np.array(magr)-np.array(magi)
 data=[0]*(len(maggr))
 for i in range(len(maggr)):
     data[i]=np.array([maggr[i],magri[i],magug[i]])
-
+print len(maggr)
 figure=triangle.corner(data, labels=["g-r","r-i","u-g"],plot_ellipse=True)
 figure.savefig("demo.png")
 
