@@ -41,8 +41,8 @@ def sqldata(n):
     p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
-    WHERE psfMag_r<19  \
-    and psfMag_r>15 and type=6 \
+    WHERE psfMag_r BETWEEN 15.0 and 19.0 \
+    and type=6 \
     and  dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
     and calibStatus_r=1 \
     and s.elodieTEff!=0 and s.elodieFeH!=0 and s.elodieLogG!=0 \
@@ -57,10 +57,11 @@ def sqldata(n):
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    and sqrt((power(psfMag_u-psfmag_g-0.82,2)+ \
-    power(psfMag_g-psfMag_r-0.3,2)+ \
-    power(psfMag_r-psfMag_i-0.09,2)+\
-    power(psfMag_i-psfMag_z-0.02,2)))<0.20").read()
+    AND  (psfMag_u-psfmag_g) between 0.62 and 1.02 \
+    AND (psfMag_g-psfmag_r) between 0.10 and 0.50 \
+    AND (psfMag_r-psfmag_i) between -0.11 and 0.29 \
+    AND (psfMag_i-psfmag_z) between -0.17 and 0.22").read()
+    #  r=0.53183
     interim=alldata.replace("\n",",")
     compiled=interim.split(",")
     for i in range(20,len(compiled)-1,19):
