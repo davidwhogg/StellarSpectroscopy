@@ -5,7 +5,7 @@ def __main__():
 #    sys.path.append(directory)
     import sqlcl
 
-    alldata=  sqlcl.query("SELECT top 10000 p.objID, \
+    alldata=  sqlcl.query("SELECT p.objID, \
     p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
     p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
     p.psfMag_u, p.psfMag_g, p.psfMag_r, p.psfMag_i, p.psfMag_z \
