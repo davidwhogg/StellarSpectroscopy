@@ -3,7 +3,11 @@ StellarSpectroscopy
 
 Quick summary:
 -------------
-**sqlcl.py** should be downloaded if it's not on the computer already. Otherwise, run **graphcode.py** (which will import **sqldata_notmain.py**) and it will produce the graph of two particular variables & a particular spectrum at a particular data point.
+**sqlcl.py** should be downloaded if it's not on the computer already. All below programes will import **sqldata_notmain.py**, which is a copy of the query from **filterstars.py**.
+Otherwise, run:
+* **graphcode.py** and it will produce the graph of two particular variables & a particular spectrum at a particular data point.
+* **histotriangle.py** which will graph histograms of the variables, using the stars from **filterstars.py** as well as a contour plot of two variables. Sample picture: http://postimg.org/image/s3pdr2dhx/
+* **LDA with SQLdata.py** which will take the same stars from **filterstars.py** and apply Linear Discriminant Analysis to them. Right now, the two classes have been arbitrarily assigned and the resulting analysis is meaningless. Sample picture: http://postimg.org/image/7d3d02as5/
 
 Explanation of code:
 -------------------
