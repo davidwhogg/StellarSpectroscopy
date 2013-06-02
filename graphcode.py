@@ -14,7 +14,7 @@ from scipy.interpolate import UnivariateSpline
 #sys.path.append(directory)
 #import sqlcl
 import sqldata_notmain
-array10=sqldata_notmain.sqldata(10) #the number is not important
+array10=sqldata_notmain.sqldata(1) #the number is not important
 
 wls=array10[1][1][0] #array of wavelengths for one particular star
 fluxes=array10[1][0][0] #array of fluxes for one particular star
@@ -54,7 +54,7 @@ plt.scatter(maggr,magri,s=sa, c=ca, marker="o", alpha=0.1, edgecolors = 'none')
 #fig.set_size_inches(6,3)
 plt.xlabel("g-r")
 plt.ylabel("r-i")
-
+'''
 ##### SPLINE
 s = UnivariateSpline(wls, fluxes, k=3, s=0)
 xs=np.linspace(min(wls),max(wls),len(wls)*10)
@@ -76,7 +76,7 @@ plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 fig = plt.gcf()
 fig.set_size_inches(6,3)
 
- 
+''' 
 #####
 
 plt.show()
