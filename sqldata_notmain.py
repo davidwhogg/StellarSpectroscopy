@@ -1,3 +1,4 @@
+
 import numpy as np
 import os
 from pylab import *
@@ -9,7 +10,11 @@ os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
 sys.path.append(directory)
 import sqlcl
-def sqldata(n):
+def sqldata(diff): #change to diff1, diff2, diff3 to cycle
+    #diff= 0.08 #one of the four should always be commented out
+    diff1= 0.08
+    diff2= 0.08
+    diff3= 0.08
     objids=[] #this one is left empty, ignore
 
     objs=[] #8
@@ -30,12 +35,12 @@ def sqldata(n):
     magr=[] #16
     magi=[] #17
     magz=[] #18
-
+    
     array1=[objids,extinction,teff,feh,names,camcol,run,ids,objs,plate,fiber,mjd,\
             ras,decs,magu,magg,magr,magi,magz]
 
 
-    alldata= sqlcl.query("SELECT p.objID, \
+    query = "SELECT p.objID, \
     p.extinction_g, s.elodieTEff, s.elodieFeH, s.elodieObject, p.camcol, p.run, p.field, \
     p.obj, s.plate, s.fiberID, s.mjd, p.ra, p.dec, \
     p.psfMag_u, p.psfMag_g, psfMag_r, psfMag_i, psfMag_z \
@@ -57,10 +62,11 @@ def sqldata(n):
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    AND  (psfMag_u-psfmag_g) between 0.62 and 1.02 \
-    AND (psfMag_g-psfmag_r) between 0.10 and 0.50 \
-    AND (psfMag_r-psfmag_i) between -0.11 and 0.29 \
-    AND (psfMag_i-psfmag_z) between -0.17 and 0.22").read()
+    AND  (psfMag_u-psfmag_g) between 0.82-" +str(diff)+ " and 0.82+"+str(diff)+ " \
+    AND (psfMag_g-psfmag_r) between 0.3-" +str(diff1)+ " and 0.30+"+str(diff1) + " \
+    AND (psfMag_r-psfmag_i) between 0.09-" +str(diff2)+  " and 0.09+" +str(diff2) + " \
+    AND (psfMag_i-psfmag_z) between 0.02-" +str(diff3)+ " and 0.02+" +str(diff3)
+    alldata=sqlcl.query(query).read()
     #  r=0.53183
     interim=alldata.replace("\n",",")
     compiled=interim.split(",")
@@ -107,7 +113,7 @@ def sqldata(n):
     errormags=[]
     wls=[]
     array2=[fluxes,wls,sn2s,errormags]
-    for i in range(1) :
+    '''for i in range(1) :
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -124,6 +130,6 @@ def sqldata(n):
         sn2=tabs[i][2].data.field(6)[0]+tabs[i][2].data.field(7)[0] #one of these entries is 0 always
         sn2s.append(sn2)
         errormag=1/sn2
-        errormags.append(errormag)
+        errormags.append(errormag)'''
     return array1, array2
 
