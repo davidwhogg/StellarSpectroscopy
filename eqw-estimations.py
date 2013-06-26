@@ -111,7 +111,7 @@ def eqw_estimation(exta,extb,n):
     errormags=[]
     wls=[]
     array2=[fluxes,wls,sn2s,errormags]
-    for i in range(1) :
+    for i in range(n) :
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -138,8 +138,6 @@ def eqw_estimation(exta,extb,n):
             lamcor[k]=float(lam[k])/float((1+zm)) 
             
         wls.append(lamcor)
-        #wls.append(lam)
-        print lam-lamcor
         
         sn2=tabs[i][2].data.field(6)[0]+tabs[i][2].data.field(7)[0] #one of these entries is 0 always
         sn2s.append(sn2)
@@ -151,7 +149,7 @@ def eqw_estimation(exta,extb,n):
     gammadata=[]
     deltadata=[]
     grouped_data=[deltadata,gammadata,betadata]
-    for z in range(1):
+    for z in range(n):
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
