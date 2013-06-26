@@ -206,7 +206,7 @@ def eqw_estimation(exta,extb,n):
         print z, "blue flux, cont, reqw @ h-gamma 4340 is", hgflux[z], hgcont[z], hgreqw[z]
         plt.grid(True)
         plt.show()
-    return grouped_datas
+    return grouped_data
 ## grouped_data is separated into 3 columns, one for each peak location
 ## grouped_data[i] is further split into n entries for the n value chosen 
 ## grouped_data[i][j] is split into [0]=cont, [1]=flux, [2]=eqw, [3]=peak location
