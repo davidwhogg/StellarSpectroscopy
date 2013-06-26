@@ -12,7 +12,6 @@ sys.path.append(directory)
 import sqlcl
 
 def eqw_est(exta,extb,n):
-
     objids=[] #this one is left empty, ignore
 
     objids=[]
@@ -38,7 +37,7 @@ def eqw_est(exta,extb,n):
     array1=[objids,extinction,hbflux,hbreqw,hbcont,hdflux,hdreqw,hdcont,objs,plate,fiber,mjd,\
             n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
 
-    query = "SELECT top "+str(n)+" 10 p.objID, \
+    query = "SELECT top "+str(n)+" p.objID, \
     p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, \
     p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, g.h_alpha_cont, \
     p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont \
@@ -112,7 +111,7 @@ def eqw_est(exta,extb,n):
     errormags=[]
     wls=[]
     array2=[fluxes,wls,sn2s,errormags]
-    for i in range(1) :
+    for i in range(len(hgcont)) :
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -152,7 +151,7 @@ def eqw_est(exta,extb,n):
     gammadata=[]
     deltadata=[]
     grouped_data=[deltadata,gammadata,betadata]
-    for z in range(1):
+    for z in range(len(hgcont)):
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
@@ -174,20 +173,20 @@ def eqw_est(exta,extb,n):
             
             ## redefine domain of integration
             h=xs[1]-xs[0] #how to deal with spline not being continuous
-            lower_bound= [x for x in xs if x<peak_loc and x>peak_loc-30]
-            upper_bound= [x for x in xs if x>peak_loc and x<peak_loc+30]
+            lower_bound= [x for x in xs if x<peak_loc and x>peak_loc-15]
+            upper_bound= [x for x in xs if x>peak_loc and x<peak_loc+15]
             intersection_lower = [x for x in lower_bound \
                                   if s(x)<cont1 and s(x-h)>cont1\
-                                  and x<peak_loc-10] #basically, the intermediate value theorem
+                                  and x<peak_loc-7.5] #basically, the intermediate value theorem
             intersection_upper = [x for x in upper_bound \
                                   if s(x)<cont1 and s(x+h)>cont1\
-                                  and x>peak_loc+10]
+                                  and x>peak_loc+7.5]
             if len(intersection_lower)==0:
-                lower_limit = peak_loc-10 #failsafe; guarantees 10A
+                lower_limit = peak_loc-7.5 #failsafe; guarantees 10A
             else:
                 lower_limit = max(intersection_lower) #else take nearest root
             if len(intersection_upper)==0:#failsafe; guarantees 10A
-                upper_limit = peak_loc+10
+                upper_limit = peak_loc+7.5
             else:
                 upper_limit = min(intersection_upper) #else take nearest root
                 
@@ -200,8 +199,6 @@ def eqw_est(exta,extb,n):
             eqw = flux/cont1
             grouped_data[i].append([cont1, flux, eqw, peak_loc,])
             plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
-            
-        print grouped_data
         
         plt.xlim(4000,5000)
         plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1) 
@@ -230,3 +227,6 @@ def eqw_est(exta,extb,n):
         plt.grid(True)
         plt.show()
     return grouped_data
+## grouped_data is separated into 3 columns, one for each peak location
+## grouped_data[i] is further split into n entries for the n value chosen
+## grouped_data[i][j] is split into [0]=cont, [1]=flux, [2]=eqw, [3]=peak location
