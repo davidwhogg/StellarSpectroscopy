@@ -3,11 +3,14 @@ StellarSpectroscopy
 
 Quick summary:
 -------------
-**sqlcl.py** should be downloaded if it's not on the computer already. All below programes will import **sqldata_notmain.py**, which is a copy of the query from **filterstars.py**.
+* **sqlcl.py** should be downloaded if it's not on the computer already. 
+* * Current work is in **eqw_estimate.py**: this function estimates the equivalent widths and continuum values of the h-b, h-gamma, h-d peaks for *n* stars with extinction values between *exta* and *extb*. It returns an array with the integrated fluxes, continuum values, equivalent widths and peak locations. Sample picture: http://postimg.org/image/nniirvr7r/. **NOTE: eqw_est_improved.py does the same thing as eqw_estimate.py but it chooses the region for flux integration by finding the nearest point of intersection of the spectrum with the continuum**
+
+* All below programes will import **sqldata_notmain.py**, which is a copy of the query from **filterstars.py**.
 Otherwise, run:
-* **graphcode.py** and it will produce the graph of two particular variables & a particular spectrum at a particular data point.
-* **histotriangle.py** which will graph histograms of the variables, using the stars from **filterstars.py** as well as a contour plot of two variables. Sample picture: http://postimg.org/image/s3pdr2dhx/
-* **LDA with SQLdata.py** which will take the same stars from **filterstars.py** and apply Linear Discriminant Analysis to them. Right now, the two classes have been arbitrarily assigned and the resulting analysis is meaningless. Sample picture: http://postimg.org/image/7d3d02as5/
+* * **graphcode.py** and it will produce the graph of two particular variables & a particular spectrum at a particular data point.
+* * **histotriangle.py** which will graph histograms of the variables, using the stars from **filterstars.py** as well as a contour plot of two variables. Sample picture: http://postimg.org/image/s3pdr2dhx/
+* * **LDA with SQLdata.py** which will take the same stars from **filterstars.py** and apply Linear Discriminant Analysis to them. Right now, the two classes have been arbitrarily assigned and the resulting analysis is meaningless. Sample picture: http://postimg.org/image/7d3d02as5/
 
 Explanation of code:
 -------------------
