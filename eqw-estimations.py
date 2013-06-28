@@ -10,7 +10,7 @@ os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
 sys.path.append(directory)
 import sqlcl
-def eqw_estimation(exta,extb,n):
+def eqw_estimation():
         
     objids=[] #this one is left empty, ignore
 
@@ -36,8 +36,8 @@ def eqw_estimation(exta,extb,n):
 
     array1=[objids,extinction,hbflux,hbreqw,hbcont,hdflux,hdreqw,hdcont,objs,plate,fiber,mjd,\
             n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
-
-    query = "SELECT top "+str(n)+" p.objID, \
+#and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
+    query = "SELECT top 3 p.objID, \
     p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, \
     p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, g.h_alpha_cont, \
     p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont \
@@ -46,8 +46,8 @@ def eqw_estimation(exta,extb,n):
     JOIN galSpecLine as g on s.specobjID=g.specobjID \
     JOIN galSpecInfo as info on s.specObjID=info.specobjID \
     WHERE psfMag_r BETWEEN 15.0 and 19.0 \
-    and p.type=6 and p.extinction_g between "+str(exta)+" AND "+str(extb)+ \
-    " and  dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
+    and p.type=6  \
+     and  dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
     and calibStatus_r=1 \
     and s.elodieTEff!=0 and s.elodieFeH!=0 and s.elodieLogG!=0 \
     and ((flags&dbo.fPhotoFlags('BLENDED')) \
@@ -60,7 +60,7 @@ def eqw_estimation(exta,extb,n):
     +(flags&dbo.fPhotoFlags('SATUR_CENTER'))+ \
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
-    (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
+    (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 and p.extinction_g>0.27 \
     AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
     AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
     AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
@@ -104,6 +104,7 @@ def eqw_estimation(exta,extb,n):
         hgreqw.append(float(compiled[i]))
     for i in range(37,len(compiled)-1,19):
         hgcont.append(float(compiled[i]))
+    print len(hgcont)
 
     tabs=[] #this will contain each fits file in one super-array
     fluxes=[]
@@ -111,7 +112,7 @@ def eqw_estimation(exta,extb,n):
     errormags=[]
     wls=[]
     array2=[fluxes,wls,sn2s,errormags]
-    for i in range(n) :
+    for i in range(len(hgcont)) :
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -138,7 +139,6 @@ def eqw_estimation(exta,extb,n):
             lamcor[k]=float(lam[k])/float((1+zm)) 
             
         wls.append(lamcor)
-        
         sn2=tabs[i][2].data.field(6)[0]+tabs[i][2].data.field(7)[0] #one of these entries is 0 always
         sn2s.append(sn2)
         errormag=1/sn2
@@ -149,7 +149,7 @@ def eqw_estimation(exta,extb,n):
     gammadata=[]
     deltadata=[]
     grouped_data=[deltadata,gammadata,betadata]
-    for z in range(n):
+    for z in range(len(hgcont)):
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
@@ -165,7 +165,6 @@ def eqw_estimation(exta,extb,n):
             for k in windows[i]:
                 if s(k) == min(s(windows[i])):
                     peak_loc = k #location of minima, wl
-                    print peak_loc, i
             flux_domain = [x for x in xs if x>peak_loc-10 and x<peak_loc+10]
             ys=s(flux_domain) #flux values
             ## ESTIMATING CONT: using median
@@ -197,12 +196,13 @@ def eqw_estimation(exta,extb,n):
         plt.plot(np.array([4002,4202]),np.array([grouped_data[0][z][0]]*2), color='k')
         plt.plot(np.array([4240,4440]),np.array([grouped_data[1][z][0]]*2), color='k')
 
-        plt.title("Reported continuum values for extinction ="+ str(extinction[z]))
+        plt.title("Spectrum for extinction ="+ str(extinction[z]))
         print z, "blue flux, cont, reqw @ h-b 4861 is", hbflux[z], hbcont[z], hbreqw[z]
         print z, "blue flux, cont, reqw @ h-d 4102 is", hdflux[z], hdcont[z], hdreqw[z]
         print z, "blue flux, cont, reqw @ h-a 6565 is", n2flux[z], n2cont[z], n2reqw[z]
         print z, "blue flux, cont, reqw @ h-gamma 4340 is", hgflux[z], hgcont[z], hgreqw[z]
         plt.grid(True)
+        print grouped_data
         plt.show()
     return grouped_data
 ## grouped_data is separated into 3 columns, one for each peak location
