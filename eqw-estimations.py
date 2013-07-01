@@ -38,7 +38,7 @@ for b in range(1):
     array1=[objids,extinction,hbflux,hbreqw,hbcont,hdflux,hdreqw,hdcont,objs,plate,fiber,mjd,\
             n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
 #and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
-    query = "SELECT top 100 p.objID, \
+    query = "SELECT p.objID, \
     p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, \
     p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, g.h_alpha_cont, \
     p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont \
@@ -62,7 +62,6 @@ for b in range(1):
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    AND p.extinction_g < 0.075 \
     AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
     AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
     AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
@@ -118,9 +117,9 @@ for b in range(1):
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
-        #commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
-        #print "command success", i
-        tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
+        commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
+        print "command success", i
+        '''tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
         if type(tabs[i][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
@@ -178,9 +177,9 @@ for b in range(1):
                     flux = 0.5*(flux_domain[1]-flux_domain[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
                     eqw = flux/cont1
                     grouped_data[w].append([cont1, flux, eqw, peak_loc,])
-                    print "ok done", z, w, k
+                    print "ok done", z, w
             
-            '''plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
+            plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
 
         plt.xlim(4000,5000)
         plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1) 
@@ -209,9 +208,9 @@ for b in range(1):
         plt.grid(True)
         #print grouped_data
         plt.show()'''
-f=open("ext1", "wb")
-pickle.dump(grouped_data,f)
-f.close()
+#f=open("ext1", "wb")
+#pickle.dump(grouped_data,f)
+#f.close()
     #return grouped_data
 ## grouped_data is separated into 3 columns, one for each peak location
 ## grouped_data[i] is further split into n entries for the n value chosen 
