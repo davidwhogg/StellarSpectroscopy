@@ -10,8 +10,9 @@ os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
 sys.path.append(directory)
 import sqlcl
-def eqw_estimation():
-        
+import pickle
+#def eqw_estimation():
+for b in range(1):       
     objids=[] #this one is left empty, ignore
 
     objids=[]
@@ -37,7 +38,7 @@ def eqw_estimation():
     array1=[objids,extinction,hbflux,hbreqw,hbcont,hdflux,hdreqw,hdcont,objs,plate,fiber,mjd,\
             n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
 #and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
-    query = "SELECT top 3 p.objID, \
+    query = "SELECT top 100 p.objID, \
     p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, \
     p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, g.h_alpha_cont, \
     p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont \
@@ -60,7 +61,8 @@ def eqw_estimation():
     +(flags&dbo.fPhotoFlags('SATUR_CENTER'))+ \
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
-    (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 and p.extinction_g>0.27 \
+    (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
+    AND p.extinction_g < 0.075 \
     AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
     AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
     AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
@@ -104,7 +106,7 @@ def eqw_estimation():
         hgreqw.append(float(compiled[i]))
     for i in range(37,len(compiled)-1,19):
         hgcont.append(float(compiled[i]))
-    print len(hgcont)
+    print len(plate)
 
     tabs=[] #this will contain each fits file in one super-array
     fluxes=[]
@@ -112,13 +114,14 @@ def eqw_estimation():
     errormags=[]
     wls=[]
     array2=[fluxes,wls,sn2s,errormags]
-    for i in range(len(hgcont)) :
+    for i in range(len(plate)) :
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
-        commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
-        
+        #commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
+        #print "command success", i
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
+        print "tab success", i
         tabs.append(tab)
         if type(tabs[i][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[i][2].data.field(63)[0] #redshift
@@ -149,7 +152,7 @@ def eqw_estimation():
     gammadata=[]
     deltadata=[]
     grouped_data=[deltadata,gammadata,betadata]
-    for z in range(len(hgcont)):
+    for z in range(len(plate)):
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
@@ -160,22 +163,24 @@ def eqw_estimation():
         windows=[delta, gamma, beta]
 
 
-        for i in range(len(peaks)):
-        
-            for k in windows[i]:
-                if s(k) == min(s(windows[i])):
-                    peak_loc = k #location of minima, wl
-            flux_domain = [x for x in xs if x>peak_loc-10 and x<peak_loc+10]
-            ys=s(flux_domain) #flux values
-            ## ESTIMATING CONT: using median
-            cont1 = np.median(s(windows[i]))
-            ## integral:
-            ys_corr = ys-cont1 #ready for integration
-            #len flux_domain = len ys_corr
-            flux = 0.5*(flux_domain[1]-flux_domain[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
-            eqw = flux/cont1
-            grouped_data[i].append([cont1, flux, eqw, peak_loc,])
-            plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
+        for w in range(len(peaks)): #for each peak location...
+            y=s(windows[w])
+            for k in range(len(y)):    #take the neighborhoold...
+                if y[k] == min(y): #to find the minimum...
+                    peak_loc = windows[w][k] #location of minima
+                    flux_domain = [x for x in xs if x>peak_loc-10 and x<peak_loc+10]
+                    ys=s(flux_domain) #flux values
+                    ## ESTIMATING CONT: using median
+                    cont1 = np.median(y)
+                    ## integral:
+                    ys_corr = ys-cont1 #ready for integration
+                    #len flux_domain = len ys_corr
+                    flux = 0.5*(flux_domain[1]-flux_domain[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
+                    eqw = flux/cont1
+                    grouped_data[w].append([cont1, flux, eqw, peak_loc,])
+                    print "ok done", z, w, k
+            
+            '''plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
 
         plt.xlim(4000,5000)
         plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1) 
@@ -202,9 +207,12 @@ def eqw_estimation():
         print z, "blue flux, cont, reqw @ h-a 6565 is", n2flux[z], n2cont[z], n2reqw[z]
         print z, "blue flux, cont, reqw @ h-gamma 4340 is", hgflux[z], hgcont[z], hgreqw[z]
         plt.grid(True)
-        print grouped_data
-        plt.show()
-    return grouped_data
+        #print grouped_data
+        plt.show()'''
+f=open("ext1", "wb")
+pickle.dump(grouped_data,f)
+f.close()
+    #return grouped_data
 ## grouped_data is separated into 3 columns, one for each peak location
 ## grouped_data[i] is further split into n entries for the n value chosen 
 ## grouped_data[i][j] is split into [0]=cont, [1]=flux, [2]=eqw, [3]=peak location
