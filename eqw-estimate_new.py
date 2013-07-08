@@ -112,16 +112,9 @@ def getdata():
     sn2s=[]
     errormags=[]
     wls=[]
-
-    ### extinction verification, for checking anomalies. Not default
-    '''for i in range(len(plate)):########## cf line 132, 175, 193
-        if extinction[i]==0.077685:
-            plateid=plate[i]
-            mjdid=mjd[i]
-            fiberid=fiber[i]'''
     
     ### use this by default
-    for i in range(2700,len(plate)): #cf 132, 175, 198
+    for i in range(2700): #cf 132, 175, 198
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -129,7 +122,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i-2700 #-2700 ###########
+        j=i #-2700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -167,18 +160,18 @@ def calc():
     gammadata=[]
     deltadata=[]
 
-    f=open("datas", "rb")
+    '''f=open("datas", "rb")
     data=pickle.load(f)
-    f.close()
+    f.close()'''
     
     grouped_data=[deltadata,gammadata,betadata] 
-    for z in range(len(plate)-2700): #len(plate)-2700
+    for z in range(2700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
         peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
 
-        for w in range(len(peaks)): #for each peak location..
+        for w in range(peaks): #for each peak location..
             cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
             cont_est=s(cont_zone)
             cont1=np.median(cont_est) #Cont value
@@ -195,19 +188,22 @@ def calc():
             #len flux_domain = len ys_corr
             flux = 0.5*(flux_domain[1]-flux_domain[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
             eqw = flux/cont1
-            data[w].append([cont1, flux, eqw, peak_loc, extinction[z+2700], plate[z+2700], mjd[z+2700], fiber[z+2700], str(int(objid[z+2700]))]) #grouped_data
+            grouped_data[w].append([cont1, flux, eqw, peak_loc, extinction[z], plate[z], mjd[z], fiber[z], str(int(objid[z]))]) #grouped_data
             print "ok done", z, w
 
-    return data #grouped_data and also 198
+    return grouped_data #grouped_data and also 191>>> wls, fluxes, sn2s, ivars = getdata(3)
 
 data = calc() #len(tabs)?  ##grouped_data
-f2=open("datas2","wb")    
+f2=open("datas3","wb")    
 pickle.dump(data,f2) #grouped_data
 f2.close()
 
-########### Plot spectra ########
-def plot():
-    for z in range(len(plate)/1000): #len(plate)-2700
+########### Plot spectra ######## (need grouped_data) - can only plot 
+def plot(n):
+    f=open("datas2","rb")
+    grouped_data=pickle.load(f)
+    f.close()
+    for z in range(1) : # i.e. z=0
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
@@ -236,11 +232,11 @@ def plot():
         plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
     
     ################## Plot continuums
-        plt.plot(np.array([4762,4962]),np.array([grouped_data[2][z][0]]*2), color='k')
-        plt.plot(np.array([4002,4202]),np.array([grouped_data[0][z][0]]*2), color='k')
-        plt.plot(np.array([4240,4440]),np.array([grouped_data[1][z][0]]*2), color='k')
+        plt.plot(np.array([4762,4962]),np.array([grouped_data[2][n][0]]*2), color='k')
+        plt.plot(np.array([4002,4202]),np.array([grouped_data[0][n][0]]*2), color='k')
+        plt.plot(np.array([4240,4440]),np.array([grouped_data[1][n][0]]*2), color='k')
 
-        plt.title("Spectrum for objID ="+ str(int(objid[z])))
+        plt.title("Spectrum for plate-mjd-fiber = "+ str(plate[n])+"-"+str(mjd[n])+"-"+str(fiber[n]))
         plt.grid(True)
         plt.show()
     return
