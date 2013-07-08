@@ -4,7 +4,8 @@ StellarSpectroscopy
 Quick summary:
 -------------
 * **sqlcl.py** should be downloaded if it's not on the computer already. 
-* * Current work is in **eqw_estimate.py**: this function estimates the equivalent widths and continuum values of the h-b, h-gamma, h-d peaks for *n* stars with extinction values between *exta* and *extb*. It returns an array with the integrated fluxes, continuum values, equivalent widths and peak locations. Sample picture: http://postimg.org/image/nniirvr7r/. **NOTE: eqw_est_improved.py does the same thing as eqw_estimate.py but it chooses the region for flux integration by finding the nearest point of intersection of the spectrum with the continuum**
+* * Current work is in **eqw_estimate_new.py**: this function estimates the equivalent widths and continuum values of the h-b, h-gamma, h-d peaks for *n* stars with extinction values between *exta* and *extb*. It returns an array with the integrated fluxes, continuum values, equivalent widths and peak locations and saves it to a file for further reading. Sample picture: http://postimg.org/image/nniirvr7r/.
+* * Also **analysis.py** has a bunch of functions which allow for the individual inspection of the i-th spectrum. Currently it also plots a 3x3 figure of instances of failures of the above estimation module.
 
 * All below programes will import **sqldata_notmain.py**, which is a copy of the query from **filterstars.py**.
 Otherwise, run:
