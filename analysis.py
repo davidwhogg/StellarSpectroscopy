@@ -200,7 +200,6 @@ def plot(n):
     s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
     xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
     peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
-    
     for w in range(len(peaks)): #for each peak location..
         cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
         cont_est=s(cont_zone)
@@ -220,62 +219,66 @@ def plot(n):
         plt.axvline(x=peak_loc+100, color='k')
         plt.axvline(x=peak_loc-100, color='k')
         plt.plot(np.array([peak_loc-100,peak_loc+100]),np.array([cont1]*2), color='k')
-    plt.xlim(4000,4200)
+    plt.xlim(4050,4150)
     plt.step(wls[0],fluxes[0]+ivars[0], 'g', linewidth=0.4, alpha=1)
     plt.step(wls[0],fluxes[0]-ivars[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
     #plt.xlabel("wavelengths (A)")
     #plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 
-################## Plot continuums
-    #plt.plot(np.array([4762,4962]),np.array([data[2][n][0]]*2), color='k')
-    #plt.plot(np.array([4002,4202]),np.array([data[0][n][0]]*2), color='k')
-    #plt.plot(np.array([4240,4440]),np.array([data[1][n][0]]*2), color='k')
     plt.tight_layout()
     plt.title(str(plate[n])+"-"+str(mjd[n])+"-"+str(fiber[n])+".fits")
     plt.grid(True)
     return
 
-plt.subplots(nrows=3, ncols=3)
+fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
+
+'''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
-plt.title("Examples of failures")
+plt.title("Examples of failures")'''
 
-plt.subplot(331)
+ax=plt.subplot(331)
 wls, fluxes, sn2s, ivars = getdata(8)
 plot(8)
 
-plt.subplot(332)
+ax=plt.subplot(332)
 wls, fluxes, sn2s, ivars = getdata(106)
 plot(106)
 
-plt.subplot(333)
+ax=plt.subplot(333)
 wls, fluxes, sn2s, ivars = getdata(736)
 plot(736)
 
-plt.subplot(334)
+ax=plt.subplot(334)
 wls, fluxes, sn2s, ivars = getdata(216)
 plot(216)
+plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 
-plt.subplot(335)
+ax=plt.subplot(335)
 wls, fluxes, sn2s, ivars = getdata(351)
 plot(351)
 
-plt.subplot(336)
+ax=plt.subplot(336)
 wls, fluxes, sn2s, ivars = getdata(1363)
 plot(1363)
 
-plt.subplot(337)
+ax=plt.subplot(337)
 wls, fluxes, sn2s, ivars = getdata(1358)
 plot(1358)
 
-plt.subplot(338)
+ax=plt.subplot(338)
 wls, fluxes, sn2s, ivars = getdata(1465)
 plot(1465)
+plt.xlabel("Wavelengths, Ang")
 
-plt.subplot(339)
+ax=plt.subplot(339)
 wls, fluxes, sn2s, ivars = getdata(1663)
 plot(1663)
-plt.tight_layout()
+
+fig.suptitle('Failed examples')
+fig.subplots_adjust(hspace=0.2)
+plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
 plt.show()
+
 
