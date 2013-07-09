@@ -135,6 +135,7 @@ def getdata(i):
     loglam=tabs[0][1].data.field(1)
     ivar=tabs[0][1].data.field(2)
     ivars[0]=ivar
+    
     loglam=np.array(loglam)
     lam=10**loglam
     lamcor=zeros(len(lam))
@@ -146,10 +147,17 @@ def getdata(i):
     sn2s[0]=sn2
     errormag=1/sn2
     errormags[0]=errormag
+    badpoints=[]
+    for v in range(len(ivars[0])):
+        if ivars[0][v]!=0:
+            ivars[0][v]=1/sqrt(ivars[0][v])
+        elif ivars[0][v]==0:
+            badpoints.append(wls[0][v])
+            
     tab.close()
-    return wls, fluxes, sn2s, ivars
+    return wls, fluxes, sn2s, ivars, badpoints
 
-#wls, fluxes, sn2s, ivars = getdata()
+#wls, fluxes, sn2s, ivars, badpoints = getdata()
 
 
 
@@ -201,7 +209,8 @@ def plot(n):
     xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
     peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
     for w in range(len(peaks)): #for each peak location..
-        cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
+        cont_zone=[x for x in wls[0] if x>peaks[w]-100 and x<peaks[w]+100 and x not in badpoints]
+        
         cont_est=s(cont_zone)
         cont1=np.median(cont_est) #Cont value
         peak_loc_finder=[x for x in xs if x>peaks[w]-5 and x<peaks[w]+5]
@@ -219,26 +228,34 @@ def plot(n):
         plt.axvline(x=peak_loc+100, color='k')
         plt.axvline(x=peak_loc-100, color='k')
         plt.plot(np.array([peak_loc-100,peak_loc+100]),np.array([cont1]*2), color='k')
-    plt.xlim(4050,4150)
+        countdown = [x for x in badpoints if x<peak_loc and x>peaks[w]-100]
+        countup = [x for x in badpoints if x>peak_loc and x<peaks[w]+100]
+        print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
+        print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
+    plt.xlim(4002,5002)
     plt.step(wls[0],fluxes[0]+ivars[0], 'g', linewidth=0.4, alpha=1)
     plt.step(wls[0],fluxes[0]-ivars[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
-    #plt.xlabel("wavelengths (A)")
-    #plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
+    #plot ivar=0 points
+    plt.scatter(np.array(badpoints), np.array(s(badpoints)), c='r', marker='o')    
+    
+    plt.xlabel("wavelengths (A)")
+    plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 
     plt.tight_layout()
     plt.title(str(plate[n])+"-"+str(mjd[n])+"-"+str(fiber[n])+".fits")
     plt.grid(True)
+    plt.show()
     return
 
-fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
+#fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
 
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 plt.title("Examples of failures")'''
 
-ax=plt.subplot(331)
+'''ax=plt.subplot(331)
 wls, fluxes, sn2s, ivars = getdata(8)
 plot(8)
 
@@ -278,7 +295,11 @@ plot(1663)
 
 fig.suptitle('Failed examples')
 fig.subplots_adjust(hspace=0.2)
-plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
+#plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
 plt.show()
+'''
 
-
+print "The SQL Query has already been assembled and the variables plate, mjd, fiber are ready to be called"
+print "Pick any number i between 0 and ", len(plate), " and try the functions: "
+print "#wls, fluxes, sn2s, ivars, badpoints = getdata(i)"
+print "and plot(i)"
