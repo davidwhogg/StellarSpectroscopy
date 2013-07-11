@@ -112,9 +112,9 @@ def getdata():
     sn2s=[]
     errormags=[]
     wls=[]
-    
+    ivars=[]
     ### use this by default
-    for i in range(2700): #cf 132, 175, 198
+    for i in range(2700,len(plate)): #700, len(plate)): #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -122,7 +122,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i #-2700 ###########
+        j=i-2700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -137,6 +137,8 @@ def getdata():
         loglam=tabs[j][1].data.field(1)
         loglam=np.array(loglam)
         lam=10**loglam
+        ivar=tabs[j][1].data.field(2)
+        ivars.append(ivar)
         lamcor=zeros(len(lam))
         for k in range(len(lam)): #redshift correction
             lamcor[k]=float(lam[k])/float((1+zm)) 
@@ -146,36 +148,42 @@ def getdata():
         sn2s.append(sn2)
         errormag=1/sn2
         errormags.append(errormag)
+        badpoints=[]
+        for v in range(len(ivars)):
+            bad=[]    
+            if ivars[j][v]!=0:
+                ivars[j][v]=1/sqrt(ivars[j][v])
+            elif ivars[j][v]==0:
+                bad.append(wls[j][v])
+            badpoints.append(bad)
         tab.close()
-    return wls, fluxes, sn2s
+    return wls, fluxes, sn2s, ivars, badpoints
 
-wls, fluxes, sn2s = getdata()
+wls, fluxes, sn2s, ivars, badpoints = getdata()
 
 
 
 
 ##### Calculate cont, eqw, flux values ###########
 def calc():
-    betadata=[]
-    gammadata=[]
-    deltadata=[]
 
-    '''f=open("datas", "rb")
+    f=open("datanew1", "rb")
     data=pickle.load(f)
-    f.close()'''
-    
-    grouped_data=[deltadata,gammadata,betadata] 
-    for z in range(2700): #len(plate)-2700
+    f.close()
+    #data = [[],[],[]]
+    for z in range(len(plate)-2700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
         peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
-
-        for w in range(peaks): #for each peak location..
-            cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
+        
+        ys_red = s(wls[z])
+        
+        for w in range(len(peaks)): #for each peak location..
+            cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100 and x not in badpoints[z]]
             cont_est=s(cont_zone)
             cont1=np.median(cont_est) #Cont value
-
+ 
             peak_loc_finder=[x for x in xs if x>peaks[w]-5 and x<peaks[w]+5]
             peak_locs=s(peak_loc_finder)
             for q in range(len(peak_locs)):
@@ -183,27 +191,43 @@ def calc():
                     peak_loc=peak_loc_finder[q] #peak location found.
             flux_domain = [x for x in xs if x<peak_loc+10 and x>peak_loc-10] #neighborhood of 20A
             ys = s(flux_domain)
+
+            ###take ivars for the cont range
+            errors = np.array([ivars[z][x] for x in range(len(ivars[z])) \
+                               if wls[z][x]<peaks[w]+100 and wls[z][x]>peaks[w]-100 \
+                               and wls[z][x] not in badpoints[z]])
+            cont_err = np.sqrt(sum(errors**2))/len(errors)
+            
             ## integral:
             ys_corr = ys-cont1 #ready for integration
             #len flux_domain = len ys_corr
             flux = 0.5*(flux_domain[1]-flux_domain[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
+    
+            #calculate flux error: weighted sum with weights=stepsize
+            flux_errors = np.array([ivars[z][x] for x in range(len(ivars[z]))\
+                                    if wls[z][x]<peak_loc+10 and wls[z][x]>peak_loc-10\
+                                    and wls[z][x] not in badpoints[z]])
+            f_errors_squared = sum(flux_errors**2) #sum squares
+            f_error_w = 4*(f_errors_squared)-3*(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
+            flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
+
             eqw = flux/cont1
-            grouped_data[w].append([cont1, flux, eqw, peak_loc, extinction[z], plate[z], mjd[z], fiber[z], str(int(objid[z]))]) #grouped_data
+            zz=z+2700 #or z+2700
+            data[w].append([cont1, cont_err, flux, flux_err, eqw, peak_loc, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz]))]) #grouped_data
             print "ok done", z, w
+    return data #grouped_data and also 191>>> wls, fluxes, sn2s, ivars = getdata(3)
 
-    return grouped_data #grouped_data and also 191>>> wls, fluxes, sn2s, ivars = getdata(3)
-
-data = calc() #len(tabs)?  ##grouped_data
-f2=open("datas3","wb")    
-pickle.dump(data,f2) #grouped_data
+grouped_data = calc() #len(tabs)?  ##grouped_data
+f2=open("datanew2","wb")    
+pickle.dump(grouped_data,f2) #grouped_data
 f2.close()
 
 ########### Plot spectra ######## (need grouped_data) - can only plot 
-def plot(n):
+def plot():
     f=open("datas2","rb")
-    grouped_data=pickle.load(f)
+    #grouped_data=pickle.load(f)
     f.close()
-    for z in range(1) : # i.e. z=0
+    for z in range(len(grouped_data[0])):# i.e. z=0
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
