@@ -232,12 +232,17 @@ def plot(n):
         countup = [x for x in badpoints if x>peak_loc and x<peaks[w]+100]
         print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
         print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
+        # Error using upper and lower integral approx:
+                
+        
     plt.xlim(4002,5002)
     plt.step(wls[0],fluxes[0]+ivars[0], 'g', linewidth=0.4, alpha=1)
     plt.step(wls[0],fluxes[0]-ivars[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
     #plot ivar=0 points
     plt.scatter(np.array(badpoints), np.array(s(badpoints)), c='r', marker='o')    
+    
+    
     
     plt.xlabel("wavelengths (A)")
     plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
@@ -301,5 +306,5 @@ plt.show()
 
 print "The SQL Query has already been assembled and the variables plate, mjd, fiber are ready to be called"
 print "Pick any number i between 0 and ", len(plate), " and try the functions: "
-print "#wls, fluxes, sn2s, ivars, badpoints = getdata(i)"
-print "and plot(i)"
+print "wls, fluxes, sn2s, ivars, badpoints = getdata(i)"
+print "plot(i)"
