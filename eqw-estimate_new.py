@@ -60,10 +60,10 @@ def sort_data():
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
-    AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
-    AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
-    AND (psfMag_i-psfmag_z) between 0.02-0.08 and 0.02+0.08 \
+    AND  (psfMag_u-psfmag_g) between 0.82-0.16 and 0.82+0.16 \
+    AND (psfMag_g-psfmag_r) between 0.3-0.16 and 0.30+0.16 \
+    AND (psfMag_r-psfmag_i) between 0.09-0.16 and 0.09+0.16 \
+    AND (psfMag_i-psfmag_z) between 0.02-0.16 and 0.02+0.16 \
     ORDER BY extinction_g DESC"
     alldata=sqlcl.query(query).read()
     interim=alldata.replace("\n",",")
@@ -92,17 +92,19 @@ print len(plate) #check number of stars surveyed
 #######Download fits files##########
 
 def downloadfits():
-    plateid=plate[i]
-    mjdid=mjd[i]
-    fiberid=fiber[i]
-    commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
-    print "command success", i
+    for i in range(len(plate)):
+        plateid=plate[i]
+        mjdid=mjd[i]
+        fiberid=fiber[i]
+        
+        if os.path.isfile('spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')==True:
+            print "already exists", i
+        else:
+            commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
+            print "command success", i
     return
 
-#downloadfits() #can be commented out if already downloaded
-
-
-
+downloadfits() #can be commented out if already downloaded
 
 ########take flux, wl data from fits files##########
 def getdata():
@@ -114,7 +116,7 @@ def getdata():
     wls=[]
     ivars=[]
     ### use this by default
-    for i in range(2700,len(plate)): #700, len(plate)): #cf 125, 178, 222
+    for i in range(2700): #,len(plate)):  #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -122,7 +124,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i-2700 ###########
+        j=i #-2700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -167,15 +169,15 @@ wls, fluxes, sn2s, ivars, badpoints = getdata()
 ##### Calculate cont, eqw, flux values ###########
 def calc():
 
-    f=open("datanew1", "rb")
-    data=pickle.load(f)
-    f.close()
-    #data = [[],[],[]]
-    for z in range(len(plate)-2700): #len(plate)-2700
+    #f=open("datanew1", "rb")
+    #data=pickle.load(f)
+    #f.close()
+    data = [[],[],[]]
+    for z in range(2700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
-        peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
+        peaks=[4102, 4340, 4861] # Only using h-delta, h-gamma, h-beta
         
         ys_red = s(wls[z])
         
@@ -212,13 +214,13 @@ def calc():
             flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
 
             eqw = flux/cont1
-            zz=z+2700 #or z+2700
+            zz=z #+2700 #or z+2700
             data[w].append([cont1, cont_err, flux, flux_err, eqw, peak_loc, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz]))]) #grouped_data
             print "ok done", z, w
     return data #grouped_data and also 191>>> wls, fluxes, sn2s, ivars = getdata(3)
 
 grouped_data = calc() #len(tabs)?  ##grouped_data
-f2=open("datanew2","wb")    
+f2=open("morestars","wb")    
 pickle.dump(grouped_data,f2) #grouped_data
 f2.close()
 

@@ -81,6 +81,15 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 - It was found that (u-g) and (g-r) were most important for increasing the number of stars; each of these filters was linearly proportional to the number of stars returned by the SQL query, while the (r-i) and (i-z) filters quickly tapered off. 
 
 \begin{figure}
+\includegraphics[width=14cm]{../success_labeled}\\
+\caption{Example calculations for spectra.}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=14cm]{../fail_labeled}\\
+\caption{Noted failures: varying reasons lead to an overestimate of the flux and consequentially, equivalent width. The main sources are (1) a sudden jump in flux values; (2) a particularly noisy spectrum which leads to a lot of flux from the wings being included; (3) the continuum being not very flat which means more there is more flux between the continuum line and spectrum.}
+\end{figure}
+\begin{figure}
 \includegraphics[width=6cm]{../varyingug}\includegraphics[width=6cm]{../varyi-z}\\
 \caption{ On the left, the linear relationship of u-g vs number of stars can be seen, and on the right the nonlinear relationship of r-i vs number of stars can be seen.}
 \end{figure}
@@ -95,6 +104,14 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 \includegraphics[width=8cm]{../triangle}\\
 \caption{The corner plot, expanded to also include the i-z filter, showing the pairwise distribution of these three filters.}
 \end{figure}
+\begin{figure}
+\includegraphics[width=8cm]{../h_bgd_tri}\\
+\caption{A corner plot with H-$\alpha$, H-$\beta$ and H-$\gamma$ .}
+\end{figure}
+\begin{figure}
+\includegraphics[width=8cm]{../hd_tscat_ext_tri}\\
+\caption{A corner plot with H-$\delta$, extinction in the g band and the recorded effective temperature from the SDSS database. Because the temperatures in the database are rounded to the nearest 500K or so, a random number between -100 and 100 was added to each point to improve scatter.}
+\end{figure}
 \subsection{Testing out Linear Discriminant Analysis module for future use}
 - The LDA module from \href{http://scikit-learn.org/stable/install.html}{scikit-learn} was installed.
 - It was tested on the u-g vs g-r plot from above, with the two classes chosen randomly by the objID, so there is no statistical significance in the below plot.\\
@@ -102,10 +119,18 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 \includegraphics[width=6cm]{../LDAtest}\\
 \caption{Test application of LDA module to show potential usage. The two classes are color-coded and the boundary line is plotted. The module also allows for Quadratic Discriminant Analysis (not shown).}
 \end{figure}
+
+
 \section{Errors}
-- The continuum estimation error is estimated using a linear combination of the standard errors $\frac{1}{\sqrt{ivar}}$ divided by the number of values used to compute the continuum.\\
-$Error = \frac{\sqrt{\sigma_1^2 + ... + \sigma_i^2 + ... + \sigma_n^2}}{n}$\\
-- The flux estimation error is estimated using a linear combination of the standard errors, treating the trapezium rule as a linear combination:\\
-$Error = h\sqrt{1\sigma_1^2+4\sigma_2^2+ ... + 4\sigma_i^2 + ... + 4\sigma_{n-1}^2+1\sigma_n^2}$, where h is the step size used in the trapezium approximation\\
-- 
+- The ivar entry was used from the HDU 2 of each fits file: when the ivar was not zero, standard error =  $\frac{1}{\sqrt{ivar}}$. If the ivar was zero, the standard error was set as 100. \\
+- The continuum estimation error is estimated using a linear combination of the standard errors divided by the number of values used to compute the continuum. The fluxes with ivar=0 are not used in the calculation for the continuum and these errors are therefore not included in the continuum estimation error.\\
+$Error_{cont} = \frac{\sqrt{\sigma_1^2 + ... + \sigma_i^2 + ... + \sigma_n^2}}{n}$\\
+- The flux estimation error is estimated using a linear combination of the standard errors, treating the trapezium rule as a linear combination. The fluxes with ivar=0 are used in the calculation of the flux and so integrals that include these flux values will have significantly higher errors.\\
+$Error_{flux} = h\sqrt{1\sigma_1^2+4\sigma_2^2+ ... + 4\sigma_i^2 + ... + 4\sigma_{n-1}^2+1\sigma_n^2}$, where h is the step size used in the trapezium approximation\\
+
+\section{Computational time}
+- The number of queries returned using the SQL query above is 5204, taking a few minutes to run. To download all these FITS files takes approximately 3 hours. To assemble all the flux/wavelength data into an array for computing the EW, then computing the EW and relevant errors takes approximately 3 hours. \\
+- If the filter range is increased from $\pm$0.08 to $\pm$0.16, the query returns 17452 stars. This includes the 5204 stars from the original query, and as these FITS files do not need to be re-downloaded, the remaining 12248 FITS files require 6 hours to download.\\
+- As each FITS file is approximately 500KB-2MB in size, a typical computer can only process 2000-3000 FITS files at a time due to memory constraints. Even if the FITS files are closed again, Python does not reallocate the memory and the garbage-collection module did not help either. As a result, it is best to do the EW computation in blocks of 2000-3000, and to save each array each time as a binary text file, then to load it again and append the next block onto it.\\
+- Each block of 2700 takes around an hour to append the FITS files and compute the EW.
 \end{document}

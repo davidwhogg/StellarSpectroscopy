@@ -14,7 +14,7 @@ import pickle
 
 # Get Data
 
-f=open("datas2","rb")
+f=open("datanew2","rb")
 data=pickle.load(f)
 
 
@@ -107,7 +107,7 @@ def getdata(i):
             plateid=plate[i]
             mjdid=mjd[i]
             fiberid=fiber[i]'''
-    if extinction[i]!=data[0][i][4]:
+    if extinction[i]!=data[0][i][6]:
         print "mismatched extinction values!"
         sys.exit()
         
@@ -160,42 +160,6 @@ def getdata(i):
 #wls, fluxes, sn2s, ivars, badpoints = getdata()
 
 
-
-
-##### Calculate cont, eqw, flux values ########### Don't bother with this 
-def calc():
-    betadata=[]
-    gammadata=[]
-    deltadata=[]
-    
-    grouped_data=[deltadata,gammadata,betadata] 
-    for z in range(len(plate)-2700): #len(plate)-2700
-        s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
-        xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
-        
-        peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
-
-        for w in range(len(peaks)): #for each peak location..
-            cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
-            cont_est=s(cont_zone)
-            cont1=np.median(cont_est) #Cont value
-
-            peak_loc_finder=[x for x in xs if x>peaks[w]-5 and x<peaks[w]+5]
-            peak_locs=s(peak_loc_finder)
-            for q in range(len(peak_locs)):
-                if peak_locs[q]==min(peak_locs):
-                    peak_loc=peak_loc_finder[q] #peak location found.
-            flux_domain = [x for x in xs if x<peak_loc+10 and x>peak_loc-10] #neighborhood of 20A
-            ys = s(flux_domain)
-            ## integral:
-            ys_corr = ys-cont1 #ready for integration
-            #len flux_domain = len ys_corr
-            flux = 0.5*(flux_domain[1]-flux_domain[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
-            eqw = flux/cont1
-            data[w].append([cont1, flux, eqw, peak_loc, extinction[z+2700], plate[z+2700], mjd[z+2700], fiber[z+2700], str(int(objid[z+2700]))]) #grouped_data
-            print "ok done", z, w
-
-    return data #grouped_data and also 198
 '''
 data = calc() #len(tabs)?  ##grouped_data
 f2=open("datas2","wb")    
@@ -204,21 +168,21 @@ f2.close()'''
 
 ########### Plot spectra ######## (need grouped_data) - can only plot 
 def plot(n):
-
+    if data[0][n][8]!=mjd[n]:
+        print "mjd mismatch!"
+        sys.exit()
     s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
     xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
     peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
     for w in range(len(peaks)): #for each peak location..
-        cont_zone=[x for x in wls[0] if x>peaks[w]-100 and x<peaks[w]+100 and x not in badpoints]
-        
-        cont_est=s(cont_zone)
-        cont1=np.median(cont_est) #Cont value
-        peak_loc_finder=[x for x in xs if x>peaks[w]-5 and x<peaks[w]+5]
-        peak_locs=s(peak_loc_finder)
-        
-        for q in range(len(peak_locs)):
-            if peak_locs[q]==min(peak_locs):
-                peak_loc=peak_loc_finder[q] #peak location found.
+        cont1=data[w][n][0]
+        cont_err=data[w][n][1]
+        flux=data[w][n][2]
+        flux_err=data[w][n][3]
+        eqw=data[w][n][4]
+        peak_loc=data[w][n][5]
+        ext=data[w][n][6]
+
         flux_domain = [x for x in xs if x<peak_loc+10 and x>peak_loc-10] #neighborhood of 20A
         ys = s(flux_domain)
         plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
@@ -232,77 +196,107 @@ def plot(n):
         countup = [x for x in badpoints if x>peak_loc and x<peaks[w]+100]
         print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
         print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
-        # Error using upper and lower integral approx:
-                
+
+    s1="Cont: "+str(round(data[0][n][0],1)) #h-delta
+    s2="Err: "+str(round(data[0][n][1],3))
+    s3="Flux: "+str(round(data[0][n][2],1))
+    s4="Err: "+str(round(data[0][n][3],1))
+    s5="EW: "+str(round(data[0][n][4],2)) 
+    plt.text(0.05,0.2, s1, fontsize=11, transform = ax.transAxes)
+    plt.text(0.05,0.1, s2, fontsize=11, transform = ax.transAxes)
+    plt.text(0.95,0.24, s3, fontsize=11, ha='right', transform = ax.transAxes)
+    plt.text(0.95,0.16, s4, fontsize=11, ha='right', transform = ax.transAxes)
+    plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
         
-    plt.xlim(4002,5002)
+        
+    plt.xlim(4052,4152)
     plt.step(wls[0],fluxes[0]+ivars[0], 'g', linewidth=0.4, alpha=1)
     plt.step(wls[0],fluxes[0]-ivars[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
     #plot ivar=0 points
     plt.scatter(np.array(badpoints), np.array(s(badpoints)), c='r', marker='o')    
-    
-    
-    
-    plt.xlabel("wavelengths (A)")
-    plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
+        
+    #plt.xlabel("wavelengths (A)")
+    #plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 
     plt.tight_layout()
     plt.title(str(plate[n])+"-"+str(mjd[n])+"-"+str(fiber[n])+".fits")
     plt.grid(True)
-    plt.show()
     return
 
-#fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
 
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 plt.title("Examples of failures")'''
 
+fails=[8,106,736,216,351,1363,1358,1465,1663]
+succs=[2,3,166,16,13,10,15,150,132]
+
+fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
+
+for i in range(1,10):
+    n=succs[i-1]
+    j=330+i
+    ax=plt.subplot(j)
+    wls, fluxes, sn2s, ivars, badpoints = getdata(n) #or succs
+    plot(n)
+    if i in range(len(fails)-2):
+        plt.setp(ax.get_xticklabels(), visible=False)
+    elif i in range(len(fails)-3,len(fails)+1):
+        plt.setp(ax.get_xticklabels(), visible=True)
+    
+    
+    if i==4:
+        plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
+    elif i==8:
+        plt.xlabel("Wavelengths, Ang")
+    
 '''ax=plt.subplot(331)
-wls, fluxes, sn2s, ivars = getdata(8)
+wls, fluxes, sn2s, ivars, badpoints = getdata(8)
 plot(8)
 
 ax=plt.subplot(332)
-wls, fluxes, sn2s, ivars = getdata(106)
+wls, fluxes, sn2s, ivars, badpoints = getdata(106)
 plot(106)
 
 ax=plt.subplot(333)
-wls, fluxes, sn2s, ivars = getdata(736)
+wls, fluxes, sn2s, ivars, badpoints = getdata(736)
 plot(736)
 
 ax=plt.subplot(334)
-wls, fluxes, sn2s, ivars = getdata(216)
+wls, fluxes, sn2s, ivars, badpoints = getdata(216)
 plot(216)
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 
 ax=plt.subplot(335)
-wls, fluxes, sn2s, ivars = getdata(351)
+wls, fluxes, sn2s, ivars, badpoints = getdata(351)
 plot(351)
 
 ax=plt.subplot(336)
-wls, fluxes, sn2s, ivars = getdata(1363)
+wls, fluxes, sn2s, ivars, badpoints = getdata(1363)
 plot(1363)
 
 ax=plt.subplot(337)
-wls, fluxes, sn2s, ivars = getdata(1358)
+wls, fluxes, sn2s, ivars, badpoints = getdata(1358)
 plot(1358)
 
 ax=plt.subplot(338)
-wls, fluxes, sn2s, ivars = getdata(1465)
+wls, fluxes, sn2s, ivars, badpoints = getdata(1465)
 plot(1465)
 plt.xlabel("Wavelengths, Ang")
 
 ax=plt.subplot(339)
-wls, fluxes, sn2s, ivars = getdata(1663)
-plot(1663)
+wls, fluxes, sn2s, ivars, badpoints = getdata(1663)
+plot(1663)'''
 
-fig.suptitle('Failed examples')
-fig.subplots_adjust(hspace=0.2)
+fig.suptitle('Successful examples', size='large')
+fig.subplots_adjust(left=0.05, right=0.95, wspace = 0.15, hspace=0.15)
+
 #plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
+
 plt.show()
-'''
+
 
 print "The SQL Query has already been assembled and the variables plate, mjd, fiber are ready to be called"
 print "Pick any number i between 0 and ", len(plate), " and try the functions: "
