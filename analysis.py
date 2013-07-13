@@ -14,9 +14,9 @@ import pickle
 
 # Get Data
 
-f=open("datanew2","rb")
+f=open("expansion","rb")
 data=pickle.load(f)
-
+f.close()
 
 def sort_data():
     objid=[]
@@ -152,19 +152,14 @@ def getdata(i):
         if ivars[0][v]!=0:
             ivars[0][v]=1/sqrt(ivars[0][v])
         elif ivars[0][v]==0:
+            ivars[0][v]=100
             badpoints.append(wls[0][v])
             
     tab.close()
     return wls, fluxes, sn2s, ivars, badpoints
 
-#wls, fluxes, sn2s, ivars, badpoints = getdata()
+#wls, fluxes, sn2s, ivars, badpoints = getdata(8)
 
-
-'''
-data = calc() #len(tabs)?  ##grouped_data
-f2=open("datas2","wb")    
-pickle.dump(data,f2) #grouped_data
-f2.close()'''
 
 ########### Plot spectra ######## (need grouped_data) - can only plot 
 def plot(n):
@@ -225,10 +220,10 @@ def plot(n):
     return
 
 
-'''plt.subplots(nrows=3, ncols=3)
+plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
-plt.title("Examples of failures")'''
+plt.title("Examples of failures")
 
 fails=[8,106,736,216,351,1363,1358,1465,1663]
 succs=[2,3,166,16,13,10,15,150,132]

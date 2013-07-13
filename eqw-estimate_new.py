@@ -66,6 +66,7 @@ def sort_data():
     AND (psfMag_i-psfmag_z) between 0.02-0.16 and 0.02+0.16 \
     ORDER BY extinction_g DESC"
     alldata=sqlcl.query(query).read()
+    print alldata
     interim=alldata.replace("\n",",")
     nent=19 #(number of query columns)
     compiled=interim.split(",")
@@ -104,7 +105,7 @@ def downloadfits():
             print "command success", i
     return
 
-downloadfits() #can be commented out if already downloaded
+#downloadfits() #can be commented out if already downloaded
 
 ########take flux, wl data from fits files##########
 def getdata():
@@ -115,8 +116,10 @@ def getdata():
     errormags=[]
     wls=[]
     ivars=[]
+    badpoints=[]
+
     ### use this by default
-    for i in range(2700): #,len(plate)):  #cf 125, 178, 222
+    for i in range(14700,len(plate)):  #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -124,7 +127,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i #-2700 ###########
+        j=i-14700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -150,14 +153,14 @@ def getdata():
         sn2s.append(sn2)
         errormag=1/sn2
         errormags.append(errormag)
-        badpoints=[]
-        for v in range(len(ivars)):
-            bad=[]    
+        bad=[]
+        for v in range(len(ivars[j])):    
             if ivars[j][v]!=0:
                 ivars[j][v]=1/sqrt(ivars[j][v])
             elif ivars[j][v]==0:
                 bad.append(wls[j][v])
-            badpoints.append(bad)
+                ivars[j][v]=100
+        badpoints.append(bad)
         tab.close()
     return wls, fluxes, sn2s, ivars, badpoints
 
@@ -169,11 +172,11 @@ wls, fluxes, sn2s, ivars, badpoints = getdata()
 ##### Calculate cont, eqw, flux values ###########
 def calc():
 
-    #f=open("datanew1", "rb")
-    #data=pickle.load(f)
-    #f.close()
-    data = [[],[],[]]
-    for z in range(2700): #len(plate)-2700
+    f=open("expansion", "rb")
+    data=pickle.load(f)
+    f.close()
+    #data = [[],[],[]]
+    for z in range(len(plate)-14700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
@@ -208,19 +211,19 @@ def calc():
             #calculate flux error: weighted sum with weights=stepsize
             flux_errors = np.array([ivars[z][x] for x in range(len(ivars[z]))\
                                     if wls[z][x]<peak_loc+10 and wls[z][x]>peak_loc-10\
-                                    and wls[z][x] not in badpoints[z]])
+                                    and wls[z][x]])
             f_errors_squared = sum(flux_errors**2) #sum squares
             f_error_w = 4*(f_errors_squared)-3*(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
             flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
 
             eqw = flux/cont1
-            zz=z #+2700 #or z+2700
+            zz=z+14700 #or z+2700
             data[w].append([cont1, cont_err, flux, flux_err, eqw, peak_loc, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz]))]) #grouped_data
             print "ok done", z, w
-    return data #grouped_data and also 191>>> wls, fluxes, sn2s, ivars = getdata(3)
+    return data #grouped_data and also 220
 
 grouped_data = calc() #len(tabs)?  ##grouped_data
-f2=open("morestars","wb")    
+f2=open("expansion","wb")    
 pickle.dump(grouped_data,f2) #grouped_data
 f2.close()
 
@@ -238,7 +241,7 @@ def plot():
             cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
             cont_est=s(cont_zone)
             cont1=np.median(cont_est) #Cont value
-            peak_loc_finder=[x for x in xs if x>peaks[w]-5 and x<peaks[w]+5]
+            peak_loc_finder=[x for x in xs if x>peaks[w]-2 and x<peaks[w]+2]
             peak_locs=s(peak_loc_finder)
             
             for q in range(len(peak_locs)):

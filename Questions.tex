@@ -106,11 +106,18 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 \end{figure}
 \begin{figure}
 \includegraphics[width=8cm]{../h_bgd_tri}\\
-\caption{A corner plot with H-$\alpha$, H-$\beta$ and H-$\gamma$ .}
+\caption{A corner plot with H-$\alpha$, H-$\beta$ and H-$\gamma$ with color filter 0.08.}
+\end{figure}
+\begin{figure}
+\includegraphics[width=8cm]{../hdbg_expandb}\\
+\caption{A corner plot with H-$\alpha$, H-$\beta$ and H-$\gamma$ with color filter 0.16. Points with error greater than the flux integral are excluded (this therefore excludes all points with ivar=0 in any of the equivalent width calculations.}
 \end{figure}
 \begin{figure}
 \includegraphics[width=8cm]{../hd_tscat_ext_tri}\\
-\caption{A corner plot with H-$\delta$, extinction in the g band and the recorded effective temperature from the SDSS database. Because the temperatures in the database are rounded to the nearest 500K or so, a random number between -100 and 100 was added to each point to improve scatter.}
+\caption{A corner plot with H-$\delta$, extinction in the g band and the recorded effective temperature from the SDSS database with color filter = 0.08. Because the temperatures in the database are rounded to the nearest 500K or so, a random number between -100 and 100 was added to each point to improve scatter.}
+\end{figure}
+\includegraphics[width=8cm]{../HdTeffExtgExpand}\\
+\caption{A corner plot with H-$\delta$, extinction in the g band and the recorded effective temperature from the SDSS database with color filter = 0.16. A random number between -100 and 100 was added to each point to improve scatter.} 
 \end{figure}
 \subsection{Testing out Linear Discriminant Analysis module for future use}
 - The LDA module from \href{http://scikit-learn.org/stable/install.html}{scikit-learn} was installed.
