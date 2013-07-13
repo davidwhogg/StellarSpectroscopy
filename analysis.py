@@ -14,7 +14,7 @@ import pickle
 
 # Get Data
 
-f=open("expansion","rb")
+f=open("redo","rb")
 data=pickle.load(f)
 f.close()
 
@@ -204,7 +204,7 @@ def plot(n):
     plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
         
         
-    plt.xlim(4052,4152)
+    plt.xlim(4002,4202)
     plt.step(wls[0],fluxes[0]+ivars[0], 'g', linewidth=0.4, alpha=1)
     plt.step(wls[0],fluxes[0]-ivars[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
@@ -220,10 +220,10 @@ def plot(n):
     return
 
 
-plt.subplots(nrows=3, ncols=3)
+'''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
-plt.title("Examples of failures")
+plt.title("Examples of failures")'''
 
 fails=[8,106,736,216,351,1363,1358,1465,1663]
 succs=[2,3,166,16,13,10,15,150,132]
@@ -231,7 +231,7 @@ succs=[2,3,166,16,13,10,15,150,132]
 fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
 
 for i in range(1,10):
-    n=succs[i-1]
+    n=fails[i-1]
     j=330+i
     ax=plt.subplot(j)
     wls, fluxes, sn2s, ivars, badpoints = getdata(n) #or succs
@@ -285,7 +285,7 @@ ax=plt.subplot(339)
 wls, fluxes, sn2s, ivars, badpoints = getdata(1663)
 plot(1663)'''
 
-fig.suptitle('Successful examples', size='large')
+fig.suptitle('Failed examples', size='large')
 fig.subplots_adjust(left=0.05, right=0.95, wspace = 0.15, hspace=0.15)
 
 #plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
