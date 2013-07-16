@@ -1,8 +1,10 @@
 \documentclass[12pt]{article}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{subcaption}
 \begin{document}
 \section{Short Answer}
+
 
 -H-$\alpha$, H-$\beta$ lines etc. are the result of emission/absorption from electrons transitioning between different energy levels of the hydrogen atom. As stars are predominantly made up of hydrogen, we use the existence of the hydrogen spectral lines to verify if the spectrum is from a star. \\
 - The strength of the lines is related to the surface temperature of the star. The same star at different temperatures will record a different wavelength for the location of the peak, as well as different flux (and so different EW) values. The surface temperature can be dohetermined by Wien's law, i.e.
@@ -135,6 +137,51 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 $Error_{cont} = \frac{\sqrt{\sigma_1^2 + ... + \sigma_i^2 + ... + \sigma_n^2}}{n}$\\
 - The flux estimation error is estimated using a linear combination of the standard errors, treating the trapezium rule as a linear combination. The fluxes with ivar=0 are used in the calculation of the flux and so integrals that include these flux values will have significantly higher errors.\\
 $Error_{flux} = h\sqrt{1\sigma_1^2+4\sigma_2^2+ ... + 4\sigma_i^2 + ... + 4\sigma_{n-1}^2+1\sigma_n^2}$, where h is the step size used in the trapezium approximation\\
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=6cm]{../Logcont_err_good_org}
+\caption{With only points having error$\textless$continuum value.}
+\end{subfigure}
+\begin{subfigure}{.4\textwidth}
+\includegraphics[width=6cm]{../Logcont_err_all_org}
+\caption{With all points.}
+\end{subfigure}
+\caption{Log-log graphs of continuum value vs continuum error, using r=0.08}
+\end{figure}
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=6cm]{../Logcont_err_good_exp}
+\caption{With only points having error$\textless$continuum value.}
+\end{subfigure}
+\begin{subfigure}{.4\textwidth}
+\includegraphics[width=6cm]{../Logcont_err_all_exp}
+\caption{With all points.}
+\end{subfigure}
+\caption{Log-log graphs of continuum value vs continuum error, using r=0.16}
+\end{figure}
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=6cm]{../Logflux_err_good_org}
+\caption{With only points having error$\textless$flux value.}
+\end{subfigure}
+\begin{subfigure}{.4\textwidth}
+\includegraphics[width=6cm]{../Logflux_err_all_org}
+\caption{With all points.}
+\end{subfigure}
+\caption{Log-log graphs of flux value vs flux error, using r=0.08}
+\end{figure}
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=6cm]{../Logflux_err_good_exp}
+\caption{With only points having error$\textless$flux value.}
+\end{subfigure}
+\begin{subfigure}{.4\textwidth}
+\includegraphics[width=6cm]{../Logflux_err_all_exp}
+\caption{With all points.}
+\end{subfigure}
+\caption{Log-log graphs of flux value vs flux error, using r=0.16}
+\end{figure}
+
 
 \section{Computational time}
 - The number of queries returned using the SQL query above is 5204, taking a few minutes to run. To download all these FITS files takes approximately 3 hours. To assemble all the flux/wavelength data into an array for computing the EW, then computing the EW and relevant errors takes approximately 3 hours. \\

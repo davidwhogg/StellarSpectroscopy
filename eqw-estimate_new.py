@@ -60,13 +60,12 @@ def sort_data():
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    AND  (psfMag_u-psfmag_g) between 0.82-0.16 and 0.82+0.16 \
-    AND (psfMag_g-psfmag_r) between 0.3-0.16 and 0.30+0.16 \
-    AND (psfMag_r-psfmag_i) between 0.09-0.16 and 0.09+0.16 \
-    AND (psfMag_i-psfmag_z) between 0.02-0.16 and 0.02+0.16 \
+    AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
+    AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
+    AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
+    AND (psfMag_i-psfmag_z) between 0.02-0.08 and 0.02+0.08 \
     ORDER BY extinction_g DESC"
     alldata=sqlcl.query(query).read()
-    print alldata
     interim=alldata.replace("\n",",")
     nent=19 #(number of query columns)
     compiled=interim.split(",")
@@ -119,7 +118,7 @@ def getdata():
     badpoints=[]
 
     ### use this by default
-    for i in range(14700,len(plate)):  #cf 125, 178, 222
+    for i in range(2700,len(plate)):  #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -127,7 +126,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i-14700 ###########
+        j=i-2700 #-2700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -172,11 +171,11 @@ wls, fluxes, sn2s, ivars, badpoints = getdata()
 ##### Calculate cont, eqw, flux values ###########
 def calc():
 
-    f=open("expansion", "rb")
+    f=open("tight", "rb")
     data=pickle.load(f)
     f.close()
     #data = [[],[],[]]
-    for z in range(len(plate)-14700): #len(plate)-2700
+    for z in range(len(plate)-2700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         
@@ -189,7 +188,7 @@ def calc():
             cont_est=s(cont_zone)
             cont1=np.median(cont_est) #Cont value
  
-            peak_loc_finder=[x for x in xs if x>peaks[w]-5 and x<peaks[w]+5]
+            peak_loc_finder=[x for x in xs if x>peaks[w]-2.5 and x<peaks[w]+2.5]
             peak_locs=s(peak_loc_finder)
             for q in range(len(peak_locs)):
                 if peak_locs[q]==min(peak_locs):
@@ -217,13 +216,13 @@ def calc():
             flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
 
             eqw = flux/cont1
-            zz=z+14700 #or z+2700
+            zz=z+2700 #or z+2700
             data[w].append([cont1, cont_err, flux, flux_err, eqw, peak_loc, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz]))]) #grouped_data
             print "ok done", z, w
     return data #grouped_data and also 220
 
 grouped_data = calc() #len(tabs)?  ##grouped_data
-f2=open("expansion","wb")    
+f2=open("tight","wb")    
 pickle.dump(grouped_data,f2) #grouped_data
 f2.close()
 

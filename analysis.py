@@ -192,16 +192,16 @@ def plot(n):
         print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
         print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
 
-    s1="Cont: "+str(round(data[0][n][0],1)) #h-delta
-    s2="Err: "+str(round(data[0][n][1],3))
-    s3="Flux: "+str(round(data[0][n][2],1))
-    s4="Err: "+str(round(data[0][n][3],1))
-    s5="EW: "+str(round(data[0][n][4],2)) 
-    plt.text(0.05,0.2, s1, fontsize=11, transform = ax.transAxes)
-    plt.text(0.05,0.1, s2, fontsize=11, transform = ax.transAxes)
-    plt.text(0.95,0.24, s3, fontsize=11, ha='right', transform = ax.transAxes)
-    plt.text(0.95,0.16, s4, fontsize=11, ha='right', transform = ax.transAxes)
-    plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
+    #s1="Cont: "+str(round(data[0][n][0],1)) #h-delta
+    #s2="Err: "+str(round(data[0][n][1],3))
+    #s3="Flux: "+str(round(data[0][n][2],1))
+    #s4="Err: "+str(round(data[0][n][3],1))
+    #s5="EW: "+str(round(data[0][n][4],2)) 
+    #plt.text(0.05,0.2, s1, fontsize=11, transform = ax.transAxes)
+    #plt.text(0.05,0.1, s2, fontsize=11, transform = ax.transAxes)
+    #plt.text(0.95,0.24, s3, fontsize=11, ha='right', transform = ax.transAxes)
+    #plt.text(0.95,0.16, s4, fontsize=11, ha='right', transform = ax.transAxes)
+    #plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
         
         
     plt.xlim(4002,4202)
@@ -219,7 +219,7 @@ def plot(n):
     plt.grid(True)
     return
 
-
+sys.exit()
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
