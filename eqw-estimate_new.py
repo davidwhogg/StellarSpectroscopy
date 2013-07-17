@@ -118,7 +118,7 @@ def getdata():
     badpoints=[]
 
     ### use this by default
-    for i in range(1097,1098):#2700,len(plate)):  #cf 125, 178, 222
+    for i in range(2700):#2700,len(plate)):  #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -170,7 +170,7 @@ wls, fluxes, sn2s, ivars, badpoints = getdata()
 
 ##### Calculate cont, eqw, flux values ###########
 #def calc():
-for i in range(1):
+for i in range(2700):
     #f=open("tightnew", "rb")
     #data=pickle.load(f)
     #f.close()
@@ -187,11 +187,14 @@ for i in range(1):
             cont_indx = good*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
             flux_indx = (wls[z]>peaks[w]-10)*(wls[z]<peaks[w]+10)
 
-            zz=z#+2700 #or z+2700
+            zz=z#+2700 #or z+2700  ##need this for indexing subsequent parts
 
+
+            #skip peaks if there are no wavelength-flux data for that peak
             if sum(flux_indx)==0 or sum(cont_indx)==0:
                 data[w].append([0,0,0,0,0,extinction[zz],plate[zz],mjd[zz],fiber[zz],str(int(objid[zz])),0])
                 print "skipped ", z, w
+
             else:
 
                 ##Calculate Continuum
@@ -227,7 +230,7 @@ for i in range(1):
                 data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
                 print "ok done", z, w
 #    return data #grouped_data and also 220
-sys.exit()
+
 data = calc() #save data to file
 f2=open("newlines","wb")    
 pickle.dump(data,f2) 
