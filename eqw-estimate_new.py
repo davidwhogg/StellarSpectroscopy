@@ -118,7 +118,7 @@ def getdata():
     badpoints=[]
 
     ### use this by default
-    for i in range(2700):#2700,len(plate)):  #cf 125, 178, 222
+    for i in range(1097,1098):#2700,len(plate)):  #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -126,7 +126,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i#-2700 #-2700 ###########
+        j=i-1097 #-2700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -169,13 +169,13 @@ wls, fluxes, sn2s, ivars, badpoints = getdata()
 
 
 ##### Calculate cont, eqw, flux values ###########
-def calc():
-
+#def calc():
+for i in range(1):
     #f=open("tightnew", "rb")
     #data=pickle.load(f)
     #f.close()
     data = [[],[],[],[],[],[],[],[]]
-    for z in range(2700):#len(plate)-2700): #len(plate)-2700
+    for z in range(1):#len(plate)-2700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
         # peaks are [hd, hg, hb, He-I,   K,    H,   TiO,  O-I]
@@ -187,41 +187,47 @@ def calc():
             cont_indx = good*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
             flux_indx = (wls[z]>peaks[w]-10)*(wls[z]<peaks[w]+10)
 
-            ##Calculate Continuum
-            cont_zone=wls[z][(cont_indx*(True-flux_indx))]
-            cont_est=s(cont_zone) #apply spline to wavelengths
-            cont1=np.median(cont_est) #take the median
-
-            #Find bad points
-            bad = True-good
-            fail_indx = bad*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
-            fail_flag=wls[z][fail_indx]
-
-            #Calculate cont error
-            errors = np.array(ivars[z][cont_indx])                   
-            cont_err = np.sqrt(sum(errors**2))/len(errors)
-            
-            #Calculate Flux
-            flux_zone=wls[z][flux_indx]
-            ys = s(flux_zone)
-            ys_corr = ys-cont1 #subtract continuum
-            flux = 0.5*(flux_zone[1]-flux_zone[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
-    
-            #calculate flux error: weighted sum with weights=stepsize
-            flux_errors = np.array(ivars[z][flux_indx])
-            f_errors_squared = sum(flux_errors[1:-1]**2) #sum squares, not first or last value
-            f_error_w = 4*(f_errors_squared)+(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
-            flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
-
-            #calculate EW
-            eqw = flux/cont1
-
-
             zz=z#+2700 #or z+2700
-            data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
-            print "ok done", z, w
-    return data #grouped_data and also 220
 
+            if sum(flux_indx)==0 or sum(cont_indx)==0:
+                data[w].append([0,0,0,0,0,extinction[zz],plate[zz],mjd[zz],fiber[zz],str(int(objid[zz])),0])
+                print "skipped ", z, w
+            else:
+
+                ##Calculate Continuum
+                cont_zone=wls[z][(cont_indx*(True-flux_indx))]
+                cont_est=s(cont_zone) #apply spline to wavelengths
+                cont1=np.median(cont_est) #take the median
+
+                #Find bad points
+                bad = True-good
+                fail_indx = bad*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
+                fail_flag=wls[z][fail_indx]
+
+                #Calculate cont error
+                errors = np.array(ivars[z][cont_indx])                   
+                cont_err = np.sqrt(sum(errors**2))/len(errors)
+                
+                #Calculate Flux
+                flux_zone=wls[z][flux_indx]
+                ys = s(flux_zone)
+                ys_corr = ys-cont1 #subtract continuum
+                flux = 0.5*(flux_zone[1]-flux_zone[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
+        
+                #calculate flux error: weighted sum with weights=stepsize
+                flux_errors = np.array(ivars[z][flux_indx])
+                f_errors_squared = sum(flux_errors[1:-1]**2) #sum squares, not first or last value
+                f_error_w = 4*(f_errors_squared)+(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
+                flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
+
+                #calculate EW
+                eqw = flux/cont1
+
+
+                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
+                print "ok done", z, w
+#    return data #grouped_data and also 220
+sys.exit()
 data = calc() #save data to file
 f2=open("newlines","wb")    
 pickle.dump(data,f2) 
