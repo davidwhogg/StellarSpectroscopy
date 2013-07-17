@@ -187,42 +187,36 @@ def calc():
             cont_indx = good*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
             flux_indx = (wls[z]>peaks[w]-10)*(wls[z]<peaks[w]+10)
 
+            ##Calculate Continuum
             cont_zone=wls[z][(cont_indx*(True-flux_indx))]
+            cont_est=s(cont_zone) #apply spline to wavelengths
+            cont1=np.median(cont_est) #take the median
 
-            
-            #cont_zone=[x for x in wls[z] if x>peaks[w]-100 and x<peaks[w]+100 and x not in badpoints[z]]
-            cont_est=s(cont_zone)
-            cont1=np.median(cont_est) #Cont value
-
-
+            #Find bad points
             bad = True-good
             fail_indx = bad*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
             fail_flag=wls[z][fail_indx]
-            #fail_flag=[x for x in wls[z] if x>peaks[w]-100 and x<peaks[w]+100 and x in badpoints[z]]
 
-
-
-            flux_zone=wls[z][flux_indx]
-            ys = s(flux_zone)
-
-            ###take ivars for the cont range
-            errors = np.array(ivars[z][cont_indx])
-                               
+            #Calculate cont error
+            errors = np.array(ivars[z][cont_indx])                   
             cont_err = np.sqrt(sum(errors**2))/len(errors)
             
-            ## integral:
-            ys_corr = ys-cont1 #ready for integration
-            #len flux_domain = len ys_corr
+            #Calculate Flux
+            flux_zone=wls[z][flux_indx]
+            ys = s(flux_zone)
+            ys_corr = ys-cont1 #subtract continuum
             flux = 0.5*(flux_zone[1]-flux_zone[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
     
             #calculate flux error: weighted sum with weights=stepsize
             flux_errors = np.array(ivars[z][flux_indx])
-            
             f_errors_squared = sum(flux_errors[1:-1]**2) #sum squares, not first or last value
             f_error_w = 4*(f_errors_squared)+(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
             flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
 
+            #calculate EW
             eqw = flux/cont1
+
+
             zz=z#+2700 #or z+2700
             data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
             print "ok done", z, w
