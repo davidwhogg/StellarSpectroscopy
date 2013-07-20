@@ -259,7 +259,7 @@ peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970]
 
 fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
 for i in range(1,10):
-    n=fail[i-1]#+240#mum[i-1]
+    n=succs[i-1]#+240#mum[i-1]
     j=330+i
     ax=plt.subplot(j)
     wls, fluxes, sn2s, sigmas, badpoints = getdata(n) #or succs

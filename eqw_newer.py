@@ -206,8 +206,6 @@ def calc(a,b,lines): #the a and be should be same as the getdata(a,b)
     for z in range(b-a): 
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
-        # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
-        peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970] # Only using h-delta, h-gamma, h-beta
                 
 
         for w in range(5): #for each peak location up to Na-5896
