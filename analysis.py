@@ -98,7 +98,6 @@ def getdata(i):
     errormags=[0]
     wls=[0]
     ivars=[0]
-
     ### extinction verification, for checking anomalies. Not default
     '''for i in range(len(plate)):########## cf line 132, 175, 193
         if extinction[i]==0.077685:
@@ -160,7 +159,7 @@ def getdata(i):
     tab.close()
     return wls, fluxes, sn2s, ivars, badpoints
 
-#wls, fluxes, sn2s, ivars, badpoints = getdata(8)
+#wls, fluxes, sn2s, sigmas, badpoints = getdata(8)
 
 
 ########### Plot spectra ######## (need grouped_data) - can only plot 
@@ -172,7 +171,7 @@ def plot(n):
     xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
     # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
     peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970] 
-    for w in range(1): #for each peak location..
+    for w in range(5,6): #for each peak location..
 
         cont1=data[w][n][0]
         cont_err=data[w][n][1]
@@ -204,7 +203,7 @@ def plot(n):
         #countup = [x for x in badpoints if x>peak_loc and x<peaks[w]+100]
         #print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
         #print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
-    '''k=0 #[hd, hg, hb,  TiO,  Na,  He-I,   K,    H ]
+    k=5 #[hd, hg, hb,  TiO,  Na,  He-I,   K,    H ]
     s1="Cont: "+str(round(data[k][n][0],1)) #h-delta
     s2="Err: "+str(round(data[k][n][1],3))
     s3="Flux: "+str(round(data[k][n][2],1))
@@ -215,9 +214,9 @@ def plot(n):
     plt.text(0.95,0.24, s3, fontsize=11, ha='right', transform = ax.transAxes)
     plt.text(0.95,0.16, s4, fontsize=11, ha='right', transform = ax.transAxes)
     plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
-    '''    
-    plt.step(wls[0],fluxes[0]+ivars[0], 'g', linewidth=0.4, alpha=1)
-    plt.step(wls[0],fluxes[0]-ivars[0],  'g', linewidth=0.4, alpha=1)
+    
+    plt.step(wls[0],fluxes[0]+sigmas[0], 'g', linewidth=0.4, alpha=1)
+    plt.step(wls[0],fluxes[0]-sigmas[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
     #plot ivar=0 points
     plt.scatter(np.array(badpoints), np.array(s(badpoints)), c='r', marker='o')    
@@ -233,28 +232,28 @@ def plot(n):
     plt.title(str(plateid)+"-"+str(mjdid)+"-"+str(fiberid)+".fits")
     plt.grid(True)
     
-    plt.xlim(3962,4242)
+    plt.xlim(peak_loc-139,peak_loc+139)
     return
 
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 plt.title("Examples of failures")'''
-sys.exit()
+
 
 succ=[]
 fail=[]
 
 for i in range(5200):
-    if data[0][i][3]>500:
+    if data[5][i][3]>500:
         fail.append(i)
 print len(fail), "fail"            
 for i in range(5200):
-    if data[0][i][4]<-2 and data[0][i][3]<100:
+    if data[5][i][4]<-2 and data[0][i][3]<100:
         succ.append(i)
 print len(succ), "succ"
-#succs=[2,3,166,16,13,10,15,150,132]
-mum=[375,376,377,378,389,71,94,95,96,97]
+
+
 # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
 peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970]
 
@@ -263,7 +262,7 @@ for i in range(1,10):
     n=fail[i-1]#+240#mum[i-1]
     j=330+i
     ax=plt.subplot(j)
-    wls, fluxes, sn2s, ivars, badpoints = getdata(n) #or succs
+    wls, fluxes, sn2s, sigmas, badpoints = getdata(n) #or succs
     plot(n)
     if i in range(1,7):
         plt.setp(ax.get_xticklabels(), visible=False)
@@ -280,7 +279,7 @@ for i in range(1,10):
     
  
 
-fig.suptitle('Examples with H-delta', size='large')
+fig.suptitle('Examples with He-I', size='large')
 fig.subplots_adjust(left=0.05, right=0.95, wspace = 0.15, hspace=0.15)
 
 #plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
@@ -290,5 +289,4 @@ plt.show()
 
 print "The SQL Query has already been assembled and the variables plate, mjd, fiber are ready to be called"
 print "Pick any number i between 0 and ", len(plate), " and try the functions: "
-print "wls, fluxes, sn2s, ivars, badpoints = getdata(i)"
 print "plot(i)"
