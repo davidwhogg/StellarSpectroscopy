@@ -86,9 +86,6 @@ def sort_data():
 plate, mjd, fiber, extinction, objid = sort_data()
 print len(plate) #check number of stars surveyed
 
-
-
-
 #######Download fits files##########
 
 def downloadfits():
@@ -118,7 +115,7 @@ def getdata():
     badpoints=[]
 
     ### use this by default
-    for i in range(2700):#2700,len(plate)):  #cf 125, 178, 222
+    for i in range(2700,len(plate)):  #cf 125, 178, 222
         plateid=plate[i]
         mjdid=mjd[i]
         fiberid=fiber[i]
@@ -126,7 +123,7 @@ def getdata():
         tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         print "tab success", i
         tabs.append(tab)
-        j=i-1097 #-2700 ###########
+        j=i-2700 ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
             zm= tabs[j][2].data.field(63)[0] #redshift
             print i, "63"            
@@ -169,25 +166,27 @@ wls, fluxes, sn2s, ivars, badpoints = getdata()
 
 
 ##### Calculate cont, eqw, flux values ###########
-#def calc():
-for i in range(2700):
-    #f=open("tightnew", "rb")
-    #data=pickle.load(f)
-    #f.close()
-    data = [[],[],[],[],[],[],[],[]]
-    for z in range(1):#len(plate)-2700): #len(plate)-2700
+def calc():
+    f=open("newlinesnewer", "rb")
+    data=pickle.load(f)
+    f.close()
+    #data = [[],[],[],[],[],[],[],[]]
+    for z in range(len(plate)-2700): #len(plate)-2700
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
-        # peaks are [hd, hg, hb, He-I,   K,    H,   TiO,  O-I]
-        peaks=[4102, 4340, 4861, 3890, 3934, 3970, 5582, 6306] # Only using h-delta, h-gamma, h-beta
+        # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
+        peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970] # Only using h-delta, h-gamma, h-beta
                 
 
-        for w in range(len(peaks)): #for each peak location..
+        for w in range(5): #for each peak location up to Na-5896
             good = (ivars[z]!=np.inf)
-            cont_indx = good*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
-            flux_indx = (wls[z]>peaks[w]-10)*(wls[z]<peaks[w]+10)
+            cont_prim = (wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
+            cont_sec = (wls[z]<peaks[w]-20)+(wls[z]>peaks[w]+20)
+            cont_indx = good*(cont_sec*cont_prim) #cont ignores +-20A from peak
+            
+            flux_indx = (wls[z]>peaks[w]-10)*(wls[z]<peaks[w]+10) #flux is +-10A from peak
 
-            zz=z#+2700 #or z+2700  ##need this for indexing subsequent parts
+            zz=z+2700 #or z+2700  ##need this for indexing subsequent parts
 
 
             #skip peaks if there are no wavelength-flux data for that peak
@@ -208,8 +207,12 @@ for i in range(2700):
                 fail_flag=wls[z][fail_indx]
 
                 #Calculate cont error
-                errors = np.array(ivars[z][cont_indx])                   
-                cont_err = np.sqrt(sum(errors**2))/len(errors)
+                if float(len(cont_prim))/len(good*cont_prim)<0.25 or float(len(cont_sec))/len(good*cont_sec)<0.25:
+                    cont_err=np.inf
+                else:
+                    errors = np.array(ivars[z][cont_indx])                   
+                    cont_err = np.sqrt(sum(errors**2))/len(errors)
+                
                 
                 #Calculate Flux
                 flux_zone=wls[z][flux_indx]
@@ -229,61 +232,69 @@ for i in range(2700):
 
                 data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
                 print "ok done", z, w
-#    return data #grouped_data and also 220
+        for w in range(5,8):
+            good = (ivars[z]!=np.inf)
+            cont_prim = (wls[z]>3850)*(wls[z]<3880)
+            cont_sec = (wls[z]<3920)*(wls[z]>3900)
+            cont_indx = good*(cont_sec+cont_prim) #assume all three lines have same cont
+            
+            flux_indx = (wls[z]>peaks[w]-10)*(wls[z]<peaks[w]+10) #flux is +-10A from peak
+
+            zz=z+2700 #or z+2700  ##need this for indexing subsequent parts
+
+
+            #skip peaks if there are no wavelength-flux data for that peak
+            if sum(flux_indx)==0 or sum(cont_indx)==0:
+                data[w].append([0,0,0,0,0,extinction[zz],plate[zz],mjd[zz],fiber[zz],str(int(objid[zz])),0])
+                print "skipped ", z, w
+
+            else:
+
+                ##Calculate Continuum
+                cont_zone=wls[z][(cont_indx*(True-flux_indx))]
+                cont_est=s(cont_zone) #apply spline to wavelengths
+                cont1=np.median(cont_est) #take the median
+
+                #Find bad points
+                bad = True-good
+                fail_indx = bad*(wls[z]>peaks[w]-100)*(wls[z]<peaks[w]+100)
+                fail_flag=wls[z][fail_indx]
+
+                #Calculate cont error
+                if float(len(cont_prim))/len(good*cont_prim)<0.25 or float(len(cont_sec))/len(good*cont_sec)<0.25:
+                    cont_err=np.inf
+                else:
+                    errors = np.array(ivars[z][cont_indx])                   
+                    cont_err = np.sqrt(sum(errors**2))/len(errors)
+                
+                #Calculate Flux
+                flux_zone=wls[z][flux_indx]
+                ys = s(flux_zone)
+                ys_corr = ys-cont1 #subtract continuum
+                flux = 0.5*(flux_zone[1]-flux_zone[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
+        
+                #calculate flux error: weighted sum with weights=stepsize
+                flux_errors = np.array(ivars[z][flux_indx])
+                f_errors_squared = sum(flux_errors[1:-1]**2) #sum squares, not first or last value
+                f_error_w = 4*(f_errors_squared)+(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
+                flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
+
+                #calculate EW
+                eqw = flux/cont1
+
+
+                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
+                print "ok done", z, w
+    return data #grouped_data and also 220
 
 data = calc() #save data to file
-f2=open("newlines","wb")    
+f2=open("newlinesnewer","wb")    
 pickle.dump(data,f2) 
 f2.close()
 
-########### Plot spectra ######## (need grouped_data) - can only plot 
-def plot():
-    f=open("datas2","rb")
-    #grouped_data=pickle.load(f)
-    f.close()
-    for z in range(len(grouped_data[0])):# i.e. z=0
-        s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
-        xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
-        peaks=[4102, 4340, 4861] # Only using h-b, h-g, h-d
-        
-        for w in range(len(peaks)): #for each peak location..
-            cont_zone=[x for x in xs if x>peaks[w]-100 and x<peaks[w]+100]
-            cont_est=s(cont_zone)
-            cont1=np.median(cont_est) #Cont value
-            peak_loc_finder=[x for x in xs if x>peaks[w]-2 and x<peaks[w]+2]
-            peak_locs=s(peak_loc_finder)
-            
-            for q in range(len(peak_locs)):
-                if peak_locs[q]==min(peak_locs):
-                    peak_loc=peak_loc_finder[q] #peak location found.
-            flux_domain = [x for x in xs if x<peak_loc+10 and x>peak_loc-10] #neighborhood of 20A
-            ys = s(flux_domain)
-            plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
-            plt.axvline(x=peak_loc+10, color='k')
-            plt.axvline(x=peak_loc-10, color='k')
-            plt.axvline(x=peak_loc, color='r')
-            plt.axvline(x=peak_loc+100, color='k')
-            plt.axvline(x=peak_loc-100, color='k')
-        plt.xlim(4000,5000)
-        plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1) 
-        plt.xlabel("wavelengths (A)")
-        plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
-    
-    ################## Plot continuums
-        plt.plot(np.array([4762,4962]),np.array([grouped_data[2][n][0]]*2), color='k')
-        plt.plot(np.array([4002,4202]),np.array([grouped_data[0][n][0]]*2), color='k')
-        plt.plot(np.array([4240,4440]),np.array([grouped_data[1][n][0]]*2), color='k')
-
-        plt.title("Spectrum for plate-mjd-fiber = "+ str(plate[n])+"-"+str(mjd[n])+"-"+str(fiber[n]))
-        plt.grid(True)
-        plt.show()
-    return
-
-    
-    #return
-#calc()'''
     
 #return grouped_data
 ## grouped_data is separated into 3 columns, one for each peak location
 ## grouped_data[i] is further split into n entries for the number of stars 
 ## grouped_data[i][j] is split into [0]=cont, [1]=flux, [2]=eqw, [3]=peak location
+
