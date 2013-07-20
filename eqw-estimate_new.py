@@ -207,7 +207,7 @@ def calc():
                 fail_flag=wls[z][fail_indx]
 
                 #Calculate cont error
-                if float(len(cont_prim))/len(good*cont_prim)<0.25 or float(len(cont_sec))/len(good*cont_sec)<0.25:
+                if float(len(good*cont_prim))/len(cont_prim)<0.25 or float(len(good*cont_sec))/len(cont_sec)<0.25:
                     cont_err=np.inf
                 else:
                     errors = np.array(ivars[z][cont_indx])                   
