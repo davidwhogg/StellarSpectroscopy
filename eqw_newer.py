@@ -208,7 +208,7 @@ def calc(a,b,lines): #the a and be should be same as the getdata(a,b)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
                 
 
-        for w in range(5): #for each peak location up to Na-5896
+        for w in range(len(lines)): #for each peak location up to Na-5896
             good = (sigmas[z]!=np.inf)
             cont_prim = (wls[z]>lines[w][2][0])*(wls[z]<lines[w][2][1])
             cont_sec = (wls[z]>lines[w][2][2])*(wls[z]<lines[w][2][3])
@@ -245,60 +245,6 @@ def calc(a,b,lines): #the a and be should be same as the getdata(a,b)
                 
                 
                 #Calculate Flux
-                flux_zone=wls[z][flux_indx]
-                ys = s(flux_zone)
-                ys_corr = ys-cont1 #subtract continuum
-                flux = 0.5*(flux_zone[1]-flux_zone[0])*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
-        
-                #calculate flux error: weighted sum with weights=stepsize
-                flux_errors = np.array(sigmas[z][flux_indx])
-                f_errors_squared = sum(flux_errors[1:-1]**2) #sum squares, not first or last value
-                f_error_w = 4*(f_errors_squared)+(flux_errors[0]**2+flux_errors[len(flux_errors)-1]**2) #apply weights; 1 + 4 + ... + 4 + 1
-                flux_err = np.sqrt(f_error_w)*(wls[z][1]-wls[z][0]) #weight with step-size            
-
-                #calculate EW
-                eqw = flux/cont1
-
-
-                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
-
-        ######### TREAT He-I, H, K lines separately.
-        for w in range(5,8): #this can also be if lines[w][1]==3890, etc
-            good = (sigmas[z]!=np.inf)
-            cont_prim = (wls[z]>3850)*(wls[z]<3880)
-            cont_sec = (wls[z]<3920)*(wls[z]>3900)
-            cont_indx = good*(cont_sec+cont_prim) #assume all three lines have same cont
-            
-            flux_indx = (wls[z]>lines[w][1]-10)*(wls[z]<lines[w][1]+10) #flux is +-10A from peak
-
-            zz=z+a #or z+2700  ##need this for indexing subsequent parts
-
-
-            #skip peaks if there are no wavelength-flux data for that peak
-            if sum(flux_indx)==0 or sum(cont_indx)==0:
-                data[w].append([0,0,0,0,0,extinction[zz],plate[zz],mjd[zz],fiber[zz],str(int(objid[zz])),0])
-                print "skipped ", z, w
-
-            else:
-
-                ##Calculate Continuum
-                cont_zone=wls[z][(cont_indx*(np.logical_not(flux_indx)))]
-                cont_est=s(cont_zone) #apply spline to wavelengths
-                cont1=np.median(cont_est) #take the median
-
-                #Find bad points
-                bad = np.logical_not(good)
-                fail_indx = bad*(wls[z]>lines[w][1]-100)*(wls[z]<lines[w][1]+100)
-                fail_flag=wls[z][fail_indx]
-
-                #Calculate cont error
-                if float(sum(good*cont_prim))/sum(cont_prim)<0.25 or float(sum(good*cont_sec))/sum(cont_sec)<0.25:
-                    cont_err=np.inf
-                else:
-                    errors = np.array(sigmas[z][cont_indx])                   
-                    cont_err = np.sqrt(sum(errors**2))/len(errors)
-                
-                #Canewlinesnewerlculate Flux
                 flux_zone=wls[z][flux_indx]
                 ys = s(flux_zone)
                 ys_corr = ys-cont1 #subtract continuum
