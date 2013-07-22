@@ -108,7 +108,7 @@ for i in range(5204):
 
 #######Download fits files##########
 
-def downloadfits():
+def downloadfits(plate, mjd, fiber):
     for i in range(len(plate)):
         plateid=plate[i]
         mjdid=mjd[i]
@@ -124,7 +124,7 @@ def downloadfits():
 #downloadfits() #can be commented out if already downloaded
 
 ########take flux, wl data from fits files##########
-def getdata(a,b):
+def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a) entries
         
     tabs=[] #this will contain each fits file in one super-array
     fluxes=[]
@@ -182,7 +182,7 @@ def getdata(a,b):
         tab.close()
     return wls, fluxes, sn2s, sigmas, badpoints
 
-wls, fluxes, sn2s, sigmas, badpoints = getdata(2700,5204)
+wls, fluxes, sn2s, sigmas, badpoints = getdata(2700,5204, plate, fiber, mjd)
 
 
 lines=[\
@@ -198,7 +198,7 @@ lines=[\
 ##### Calculate cont, eqw, flux values ###########
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
-def calc(a,b,lines): #the a and be should be same as the getdata(a,b)
+def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a and b should be same as the getdata(a,b)
     f=open("newlinesnewer", "rb")
     data=pickle.load(f)
     f.close()
@@ -262,6 +262,7 @@ def calc(a,b,lines): #the a and be should be same as the getdata(a,b)
 
                 data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
         print "ok done", z
+    
     return data #grouped_data and(sum(cont_prim)+0.01) also 220
 
 data = calc(2700,5204,lines) #save data to file
