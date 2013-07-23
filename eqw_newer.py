@@ -1,3 +1,4 @@
+
 #Get the data via SQL query (we really only need plate-mjd-fiber for now)
 def sort_data():
     objid=[]
@@ -150,7 +151,7 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
 ##### Calculate cont, eqw, flux values ###########
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
-def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a and b should be same as the getdata(a,b)
+def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
     #f=open("newlinesnewer", "rb")
     #data=pickle.load(f)
     #f.close()
@@ -162,11 +163,11 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a a
 
         for w, line in enumerate(lines): #for each peak location up to Na-5896
             good = (sigmas[z]!=np.inf)
-            cont_prim = (wls[z]>lines[2][0])*(wls[z]<lines[2][1])
-            cont_sec = (wls[z]>lines[2][2])*(wls[z]<lines[2][3])
+            cont_prim = (wls[z]>line[2][0])*(wls[z]<line[2][1])
+            cont_sec = (wls[z]>line[2][2])*(wls[z]<line[2][3])
             cont_indx = good*(cont_sec+cont_prim) #cont ignores +-20A from peak
             
-            flux_indx = (wls[z]>lines[1]-10)*(wls[z]<lines[1]+10) #flux is +-10A from peak
+            flux_indx = (wls[z]>line[1]-10)*(wls[z]<line[1]+10) #flux is +-10A from peak
 
             zz=z+a #or z+2700  ##need this for indexing subsequent parts
 
@@ -185,7 +186,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a a
 
                 #Find bad points
                 bad = np.logical_not(good)
-                fail_indx = bad*(wls[z]>lines[1]-100)*(wls[z]<lines[1]+100)
+                fail_indx = bad*(wls[z]>line[1]-100)*(wls[z]<line[1]+100)
                 fail_flag=wls[z][fail_indx]
 
                 #Calculate cont error
@@ -212,7 +213,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a a
                 eqw = flux/cont1
 
 
-                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
+                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[z], plate[zz], mjd[zz], fiber[zz], len(fail_flag)]) #grouped_data
         print "ok done", z
     
     return data 
@@ -224,16 +225,32 @@ if __name__=="__main__":
     import os
     from pylab import *
     from scipy.interpolate import UnivariateSpline
-
     import commands
     import pyfits
     import sys
+    import pickle
     os.chdir("/Users/admin/Desktop/Maser files")
     directory=commands.getoutput("pwd")
     sys.path.append(directory)
     import sqlcl
-    import pickle
+    f=open("newlinesnewer","rb")
+    data=pickle.load(f)
+    f.close()
 
+    #Below section is for offline collection of plate/mjd/fiber values for calc()
+    '''
+    plate=[]
+    mjd=[]
+    fiber=[]
+    extinction=[]
+    objid=[]
+    for i in range(10):
+        plate.append(data[0][i][6])
+        mjd.append(data[0][i][7])
+        fiber.append(data[0][i][8])
+        extinction.append(data[0][i][5])
+        objid.append(data[0][i][9])'''
+        
     plate, mjd, fiber, extinction, objid = sort_data()
     print len(plate), " stars surveyed!" #check number of stars surveyed
 
@@ -248,12 +265,12 @@ if __name__=="__main__":
         ["H",3970,[3850,3880,3900,3920]]\
         ]
     #downloadfits() #can be commented out if already downloaded
-    wls, fluxes, sn2s, sigmas, badpoints = getdata(0,2700, plate, fiber, mjd)
-    data = calc(0,2700,lines) #save data to file
+    wls, fluxes, sn2s, sigmas, badpoints = getdata(0,10, plate, mjd, fiber)
+    data = calc(0,1,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
     f2=open("datanew","wb")    
     pickle.dump(data,f2) 
     f2.close()
-
+    
     
 #return grouped_data
 ## grouped_data is separated into 3 columns, one for each peak location
