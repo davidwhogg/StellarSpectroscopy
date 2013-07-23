@@ -1,17 +1,3 @@
-import numpy as np
-import os
-from pylab import *
-from scipy.interpolate import UnivariateSpline
-
-import commands
-import pyfits
-import sys
-os.chdir("/Users/admin/Desktop/Maser files")
-directory=commands.getoutput("pwd")
-sys.path.append(directory)
-import sqlcl
-import pickle
-
 #Get the data via SQL query (we really only need plate-mjd-fiber for now)
 def sort_data():
     objid=[]
@@ -82,27 +68,6 @@ def sort_data():
             fiber[i]=int(fiber[i])
 
     return plate, mjd, fiber, extinction, objid
-
-#plate, mjd, fiber, extinction, objid = sort_data()
-#print len(plate) #check number of stars surveyed
-
-f=open("newlinesnew","rb")
-data=pickle.load(f)
-f.close()
-plate=[]
-mjd=[]
-fiber=[]
-objid=[]
-extinction=[]
-
-for i in range(5204):
-    plate.append(data[0][i][6])
-    mjd.append(data[0][i][7])
-    fiber.append(data[0][i][8])
-    extinction.append(data[0][i][5])
-    objid.append(data[0][i][9])
-
-
     
 
 
@@ -121,7 +86,6 @@ def downloadfits(plate, mjd, fiber):
             print "command success", i
     return
 
-#downloadfits() #can be commented out if already downloaded
 
 ########take flux, wl data from fits files##########
 def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a) entries
@@ -182,39 +146,27 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
         tab.close()
     return wls, fluxes, sn2s, sigmas, badpoints
 
-wls, fluxes, sn2s, sigmas, badpoints = getdata(2700,5204, plate, fiber, mjd)
 
-
-lines=[\
-    ["H-delta",4102,[4002,4082,4122,4202]],\
-    ["H-gamma",4340,[4240,4320,4360,4440]],\
-    ["H-beta",4861,[4761,4841,4881,4961]],\
-    ["TiO",5582,[5482,5462,5602,5682]],\
-    ["Na",5896,[5796,5876,5916,5996]],\
-    ["He-I",3890,[3850,3880,3900,3920]],\
-    ["K",3934,[3850,3880,3900,3920]],\
-    ["H",3970,[3850,3880,3900,3920]]\
-    ]
 ##### Calculate cont, eqw, flux values ###########
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a and b should be same as the getdata(a,b)
-    f=open("newlinesnewer", "rb")
-    data=pickle.load(f)
-    f.close()
-    #data = [[],[],[],[],[],[],[],[]]
+    #f=open("newlinesnewer", "rb")
+    #data=pickle.load(f)
+    #f.close()
+    data = [[],[],[],[],[],[],[],[]]
     for z in range(b-a): 
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
                 
 
-        for w in range(len(lines)): #for each peak location up to Na-5896
+        for w, line in enumerate(lines): #for each peak location up to Na-5896
             good = (sigmas[z]!=np.inf)
-            cont_prim = (wls[z]>lines[w][2][0])*(wls[z]<lines[w][2][1])
-            cont_sec = (wls[z]>lines[w][2][2])*(wls[z]<lines[w][2][3])
+            cont_prim = (wls[z]>lines[2][0])*(wls[z]<lines[2][1])
+            cont_sec = (wls[z]>lines[2][2])*(wls[z]<lines[2][3])
             cont_indx = good*(cont_sec+cont_prim) #cont ignores +-20A from peak
             
-            flux_indx = (wls[z]>lines[w][1]-10)*(wls[z]<lines[w][1]+10) #flux is +-10A from peak
+            flux_indx = (wls[z]>lines[1]-10)*(wls[z]<lines[1]+10) #flux is +-10A from peak
 
             zz=z+a #or z+2700  ##need this for indexing subsequent parts
 
@@ -233,7 +185,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a a
 
                 #Find bad points
                 bad = np.logical_not(good)
-                fail_indx = bad*(wls[z]>lines[w][1]-100)*(wls[z]<lines[w][1]+100)
+                fail_indx = bad*(wls[z]>lines[1]-100)*(wls[z]<lines[1]+100)
                 fail_flag=wls[z][fail_indx]
 
                 #Calculate cont error
@@ -263,12 +215,44 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid): #the a a
                 data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], str(int(objid[zz])), len(fail_flag)]) #grouped_data
         print "ok done", z
     
-    return data #grouped_data and(sum(cont_prim)+0.01) also 220
+    return data 
 
-data = calc(2700,5204,lines) #save data to file
-f2=open("newlinesnewer","wb")    
-pickle.dump(data,f2) 
-f2.close()
+
+
+if __name__=="__main__":
+    import numpy as np
+    import os
+    from pylab import *
+    from scipy.interpolate import UnivariateSpline
+
+    import commands
+    import pyfits
+    import sys
+    os.chdir("/Users/admin/Desktop/Maser files")
+    directory=commands.getoutput("pwd")
+    sys.path.append(directory)
+    import sqlcl
+    import pickle
+
+    plate, mjd, fiber, extinction, objid = sort_data()
+    print len(plate), " stars surveyed!" #check number of stars surveyed
+
+        
+    lines=[\
+        ["H-delta",4102,[4002,4082,4122,4202]],\
+        ["H-gamma",4340,[4240,4320,4360,4440]],\
+        ["H-beta",4861,[4761,4841,4881,4961]],\
+        ["Na",5896,[5796,5876,5916,5996]],\
+        ["He-I",3890,[3850,3880,3900,3920]],\
+        ["K",3934,[3850,3880,3900,3920]],\
+        ["H",3970,[3850,3880,3900,3920]]\
+        ]
+    #downloadfits() #can be commented out if already downloaded
+    wls, fluxes, sn2s, sigmas, badpoints = getdata(0,2700, plate, fiber, mjd)
+    data = calc(0,2700,lines) #save data to file
+    f2=open("datanew","wb")    
+    pickle.dump(data,f2) 
+    f2.close()
 
     
 #return grouped_data
