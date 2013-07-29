@@ -122,6 +122,14 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 \includegraphics[width=8cm]{../HdTeffExtgExpand}\\
 \caption{A corner plot with H-$\delta$, extinction in the g band and the recorded effective temperature from the SDSS database with color filter = 0.16. A random number between -100 and 100 was added to each point to improve scatter.} 
 \end{figure}
+\begin{figure}
+\includegraphics[width=12cm]{../newAllLineEWall_notlog}\\
+\caption{A corner plot with all equivalent widths of all lines, including those flagged as having infinite error.} 
+\end{figure}
+\begin{figure}
+\includegraphics[width=12cm]{../newAllLineEWgood_notlog}\\
+\caption{A corner plot with equivalent widths of all lines where the continuum and flux errors were finite.} 
+\end{figure}
 \subsection{Testing out Linear Discriminant Analysis module for future use}
 - The LDA module from \href{http://scikit-learn.org/stable/install.html}{scikit-learn} was installed.
 - It was tested on the u-g vs g-r plot from above, with the two classes chosen randomly by the objID, so there is no statistical significance in the below plot.\\
@@ -184,8 +192,8 @@ $Error_{flux} = h\sqrt{1\sigma_1^2+4\sigma_2^2+ ... + 4\sigma_i^2 + ... + 4\sigm
 
 
 \section{Computational time}
-- The number of queries returned using the SQL query above is 5204, taking a few minutes to run. To download all these FITS files takes approximately 3 hours. To assemble all the flux/wavelength data into an array for computing the EW, then computing the EW and relevant errors takes approximately 3 hours. \\
+- The number of queries returned using the SQL query above is 5204, taking a few minutes to run. To download all these FITS files takes approximately 3 hours. To assemble all the flux/wavelength data into an array for computing the EW, then computing the EW and relevant errors takes approximately 1 hour. \\
 - If the filter range is increased from $\pm$0.08 to $\pm$0.16, the query returns 17452 stars. This includes the 5204 stars from the original query, and as these FITS files do not need to be re-downloaded, the remaining 12248 FITS files require 6 hours to download.\\
 - As each FITS file is approximately 500KB-2MB in size, a typical computer can only process 2000-3000 FITS files at a time due to memory constraints. Even if the FITS files are closed again, Python does not reallocate the memory and the garbage-collection module did not help either. As a result, it is best to do the EW computation in blocks of 2000-3000, and to save each array each time as a binary text file, then to load it again and append the next block onto it.\\
-- Each block of 2700 takes around an hour to append the FITS files and compute the EW.
+- Each block of 2700 takes around 30 minutes to append the FITS files and compute the EW.
 \end{document}
