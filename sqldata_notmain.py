@@ -132,4 +132,4 @@ def sqldata(diff): #change to diff1, diff2, diff3 to cycle
         errormag=1/sn2
         errormags.append(errormag)'''
     return array1, array2
-
+alldata=sqldata(0.08)
