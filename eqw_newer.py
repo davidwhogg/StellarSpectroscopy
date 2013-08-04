@@ -47,10 +47,10 @@ def sort_data():
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
-    AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
-    AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
-    AND (psfMag_i-psfmag_z) between 0.02-0.08 and 0.02+0.08 \
+    AND  (psfMag_u-psfmag_g) between 0.82-0.16 and 0.82+0.16 \
+    AND (psfMag_g-psfmag_r) between 0.3-0.16 and 0.30+0.16 \
+    AND (psfMag_r-psfmag_i) between 0.09-0.16 and 0.09+0.16 \
+    AND (psfMag_i-psfmag_z) between 0.02-0.16 and 0.02+0.16 \
     ORDER BY extinction_g DESC"
     alldata=sqlcl.query(query).read()
     interim=alldata.replace("\n",",")
@@ -80,7 +80,7 @@ def downloadfits(plate, mjd, fiber):
         mjdid=mjd[i]
         fiberid=fiber[i]
         
-        if os.path.isfile('spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')==True:
+        if os.path.isfile('FITS_files/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')==True:
             print "already exists", i
         else:
             commands.getoutput('wget --content-disposition "http://api.sdss3.org/spectrum?plate='+str(plateid)+'&fiber='+str(fiberid)+'&mjd='+str(mjdid)+'"')
@@ -107,7 +107,7 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
         mjdid=mjd[i]
         fiberid=fiber[i]
         
-        tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
+        tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
         tabs.append(tab)
         j=i-a ###########
         if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
@@ -152,10 +152,10 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
-    f=open("datanew", "rb")
-    data=pickle.load(f)
-    f.close()
-    #data = [[],[],[],[],[],[],[],[]]
+    #f=open("datanewbig", "rb")
+    #data=pickle.load(f)
+    #f.close()
+    data = [[],[],[],[],[],[],[]]
     for z in range(b-a): 
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
@@ -233,7 +233,7 @@ if __name__=="__main__":
     directory=commands.getoutput("pwd")
     sys.path.append(directory)
     import sqlcl
-    #f=open("datanew","rb")
+    #f=open("datanewbig","rb")
     #data=pickle.load(f)
     #f.close()
     
@@ -254,7 +254,7 @@ if __name__=="__main__":
         
     plate, mjd, fiber, extinction, objid = sort_data()
     print len(plate), " stars surveyed!" #check number of stars surveyed
-
+    sys.exit()
         
     lines=[\
         ["H-delta",4102,[4002,4082,4122,4202]],\
@@ -266,9 +266,9 @@ if __name__=="__main__":
         ["H",3970,[3850,3880,3900,3920]]\
         ]
     #downloadfits() #can be commented out if already downloaded
-    wls, fluxes, sn2s, sigmas, badpoints = getdata(2700,5204, plate, mjd, fiber)
-    data = calc(2700,5204,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
-    f2=open("datanew","wb")    
+    wls, fluxes, sn2s, sigmas, badpoints = getdata(0,3000, plate, mjd, fiber)
+    data = calc(0,3000,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
+    f2=open("datanewbig","wb")    
     pickle.dump(data,f2) 
     f2.close()
     
