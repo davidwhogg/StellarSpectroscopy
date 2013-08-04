@@ -41,12 +41,11 @@ def sort_data():
             n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
     #and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
     query = "SELECT p.objID, \
-    p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, \
-    p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, g.h_alpha_cont, \
-    p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont \
+    p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, \
+    p.obj, s.plate, s.fiberID, s.mjd, p.extinction_g, p.extinction_g, p.extinction_g, \
+    p.type, p.extinction_g, p.extinction_g, p.extinction_g \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
-    JOIN galSpecLine as g on s.specobjID=g.specobjID \
     WHERE psfMag_r BETWEEN 15.0 and 19.0 \
     and p.type=6  \
      and  dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
@@ -67,7 +66,7 @@ def sort_data():
     AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
     AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
     AND (psfMag_i-psfmag_z) between 0.02-0.08 and 0.02+0.08 \
-    ORDER BY extinction_g DESC"
+    ORDER BY p.extinction_g DESC"
     alldata=sqlcl.query(query).read()
     interim=alldata.replace("\n",",")
     nent=19 #(number of query columns)
@@ -86,7 +85,7 @@ def sort_data():
 
     return plate, mjd, fiber, extinction, objid
 
-#plate, mjd, fiber, extinction, objid = sort_data()
+plate, mjd, fiber, extinction, objid = sort_data()
 #print len(plate) #check number of stars surveyed
 
 ########take flux, wl data from fits files##########
@@ -118,7 +117,7 @@ def getdata(i):
     mjdid=data[0][i][7]
     fiberid=data[0][i][8]
     
-    tab = pyfits.open(commands.getoutput("pwd")+'/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
+    tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
     print "tab success", i
     tabs[0]=tab
     j=0 #-2700 ###########
@@ -171,7 +170,7 @@ def plot(n):
     xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
     # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
     peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970] 
-    for w in range(5,6): #for each peak location..
+    for w in range(1): #for each peak location..
 
         cont1=data[w][n][0]
         cont_err=data[w][n][1]
@@ -181,7 +180,7 @@ def plot(n):
         peak_loc=peaks[w]
         ext=data[w][n][5]
 
-        flux_domain = [x for x in xs if x<peak_loc+10 and x>peak_loc-10] #neighborhood of 20A
+        flux_domain = [x for x in xs if x<peak_loc+10 and x>peakloc-10] #neighborhood of 20A
         ys = s(flux_domain)
         plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
         plt.axvline(x=peak_loc+10, color='b')
@@ -203,8 +202,8 @@ def plot(n):
         #countup = [x for x in badpoints if x>peak_loc and x<peaks[w]+100]
         #print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
         #print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
-    k=5 #[hd, hg, hb,  TiO,  Na,  He-I,   K,    H ]
-    s1="Cont: "+str(round(data[k][n][0],1)) #h-delta
+    k=0 #[hd, hg, hb,  TiO,  Na,  He-I,   K,    H ]
+    '''s1="Cont: "+str(round(data[k][n][0],1)) #h-delta
     s2="Err: "+str(round(data[k][n][1],3))
     s3="Flux: "+str(round(data[k][n][2],1))
     s4="Err: "+str(round(data[k][n][3],1))
@@ -214,7 +213,7 @@ def plot(n):
     plt.text(0.95,0.24, s3, fontsize=11, ha='right', transform = ax.transAxes)
     plt.text(0.95,0.16, s4, fontsize=11, ha='right', transform = ax.transAxes)
     plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
-    
+    '''
     plt.step(wls[0],fluxes[0]+sigmas[0], 'g', linewidth=0.4, alpha=1)
     plt.step(wls[0],fluxes[0]-sigmas[0],  'g', linewidth=0.4, alpha=1)
     plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
@@ -234,7 +233,7 @@ def plot(n):
     
     plt.xlim(peak_loc-139,peak_loc+139)
     return
-
+sys.exit()
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
@@ -259,7 +258,7 @@ peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970]
 
 fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
 for i in range(1,10):
-    n=succs[i-1]#+240#mum[i-1]
+    n=succ[i-1]#+240#mum[i-1]
     j=330+i
     ax=plt.subplot(j)
     wls, fluxes, sn2s, sigmas, badpoints = getdata(n) #or succs
