@@ -31,13 +31,12 @@ T = $ \frac{2.9*10^7}{\lambda_{peak}} $. Furthermore, in general, denser stars h
 - The output gives the extinction (in the g-band), the recorded flux, equivalent width and continuum values given in galSpecLine for the H-$\alpha$, H-$\beta$, H-$\gamma$, H-$\delta$ lines. \\
 - However, due to the reported equivalent widths being unreasonable compared to manual estimations, the query also extracts the plate-mjd-fiber values and downloads, via wget, the relevant FITS file for this plate-mjd-fiber combination. \\
 - The full query is here: 
-\begin{verbatim}"SELECT p.objID, p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, 
-g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, 
-p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, 
-g.h_alpha_cont, p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont 
+\begin{verbatim}"SELECT p.objID, p.extinction_g, s.elodieTEff, p.extinction_g,
+ p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g,
+ p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, 
+ p.psfMag_u, p.psfMag_g, p.psfMag_r, p.psfMag_i, p.psfMag_z 
     FROM PhotoObj AS p 
     JOIN SpecObj as s ON s.specobjID=p.specobjID 
-    JOIN galSpecLine as g on s.specobjID=g.specobjID 
     WHERE psfMag_r BETWEEN 15.0 and 19.0 
     AND p.type=6 AND  dbo.fPhotoStatus('PRIMARY')>0 AND 
 dbo.fPhotoFlags('STATIONARY')>0  and  calibStatus_r=1 
