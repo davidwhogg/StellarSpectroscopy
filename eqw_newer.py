@@ -25,12 +25,11 @@ def sort_data():
             n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
     #and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
     query = "SELECT p.objID, \
-    p.extinction_g, g.h_beta_reqw_err, g.h_beta_reqw, g.h_beta_cont, g.h_delta_reqw_err, g.h_delta_reqw, g.h_delta_cont, \
-    p.obj, s.plate, s.fiberID, s.mjd, g.h_alpha_flux, g.h_alpha_reqw, g.h_alpha_cont, \
-    p.type, g.h_gamma_flux, g.h_gamma_reqw, g.h_gamma_cont \
+    p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, \
+    p.obj, s.plate, s.fiberID, s.mjd, p.extinction_g, p.extinction_g, p.extinction_g, \
+    p.type, p.extinction_g, p.extinction_g, p.extinction_g \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
-    JOIN galSpecLine as g on s.specobjID=g.specobjID \
     WHERE psfMag_r BETWEEN 15.0 and 19.0 \
     and p.type=6  \
      and  dbo.fPhotoStatus('PRIMARY')>0 and dbo.fPhotoFlags('STATIONARY')>0 \
@@ -47,11 +46,11 @@ def sort_data():
     (flags&dbo.fPhotoFlags('INTERP_CENTER')) \
     +(flags&dbo.fPhotoFlags('INTERP'))+ \
     (flags&dbo.fPhotoFlags('PSF_FLUX_INTERP')))=0 \
-    AND  (psfMag_u-psfmag_g) between 0.82-0.16 and 0.82+0.16 \
-    AND (psfMag_g-psfmag_r) between 0.3-0.16 and 0.30+0.16 \
-    AND (psfMag_r-psfmag_i) between 0.09-0.16 and 0.09+0.16 \
-    AND (psfMag_i-psfmag_z) between 0.02-0.16 and 0.02+0.16 \
-    ORDER BY extinction_g DESC"
+    AND  (psfMag_u-psfmag_g) between 0.82-0.08 and 0.82+0.08 \
+    AND (psfMag_g-psfmag_r) between 0.3-0.08 and 0.30+0.08 \
+    AND (psfMag_r-psfmag_i) between 0.09-0.08 and 0.09+0.08 \
+    AND (psfMag_i-psfmag_z) between 0.02-0.08 and 0.02+0.08 \
+    ORDER BY p.extinction_g DESC"
     alldata=sqlcl.query(query).read()
     interim=alldata.replace("\n",",")
     nent=19 #(number of query columns)
@@ -152,10 +151,10 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
-    #f=open("datanewbig", "rb")
-    #data=pickle.load(f)
-    #f.close()
-    data = [[],[],[],[],[],[],[]]
+    f=open("datanewdr8", "rb")
+    data=pickle.load(f)
+    f.close()
+    #data = [[],[],[],[],[],[],[]]
     for z in range(b-a): 
         s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
         xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
@@ -233,7 +232,7 @@ if __name__=="__main__":
     directory=commands.getoutput("pwd")
     sys.path.append(directory)
     import sqlcl
-    #f=open("datanewbig","rb")
+    #f=open("datanewdr8","rb")
     #data=pickle.load(f)
     #f.close()
     
@@ -252,10 +251,15 @@ if __name__=="__main__":
         extinction.append(data[0][i][5])
         objid.append(data[0][i][9])'''
         
-    plate, mjd, fiber, extinction, objid = sort_data()
-    print len(plate), " stars surveyed!" #check number of stars surveyed
-    sys.exit()
-        
+    #plate, mjd, fiber, extinction, objid = sort_data()
+    
+    f=open("sorted","rb")
+    array1=pickle.load(f)
+    plate=array1[9]
+    mjd=array1[11]
+    fiber=array1[10]
+    extinction=array1[1]
+    objid=array1[0]
     lines=[\
         ["H-delta",4102,[4002,4082,4122,4202]],\
         ["H-gamma",4340,[4240,4320,4360,4440]],\
@@ -266,9 +270,9 @@ if __name__=="__main__":
         ["H",3970,[3850,3880,3900,3920]]\
         ]
     #downloadfits() #can be commented out if already downloaded
-    wls, fluxes, sn2s, sigmas, badpoints = getdata(0,3000, plate, mjd, fiber)
-    data = calc(0,3000,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
-    f2=open("datanewbig","wb")    
+    wls, fluxes, sn2s, sigmas, badpoints = getdata(5400,7541, plate, mjd, fiber)
+    data = calc(5400,7541,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
+    f2=open("datanewdr8","wb")    
     pickle.dump(data,f2) 
     f2.close()
     
