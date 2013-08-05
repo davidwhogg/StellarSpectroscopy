@@ -19,7 +19,7 @@ f.close()
 def sort_data():
     objid=[]
     extinction=[]
-    hbflux=[]
+    teff=[]
     hbreqw=[]
     hbcont=[]
     hdflux=[]
@@ -31,19 +31,19 @@ def sort_data():
     mjd=[]
     n2flux=[] #n2 is now h-a, but both are not used
     n2reqw=[]
-    n2cont=[]
+    magu=[]
     magg=[]
-    hgflux=[]
-    hgreqw=[]
-    hgcont=[]
+    magr=[]
+    magi=[]
+    magz=[]
 
-    array1=[objid,extinction,hbflux,hbreqw,hbcont,hdflux,hdreqw,hdcont,objs,plate,fiber,mjd,\
-            n2flux,n2reqw,n2cont,magg,hgflux,hgreqw,hgcont]
+    array1=[objid,extinction,teff,hbreqw,hbcont,hdflux,hdreqw,hdcont,objs,plate,fiber,mjd,\
+            n2flux,n2reqw,magu,magg,magr,magi,magz]
     #and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
     query = "SELECT p.objID, \
-    p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, \
-    p.obj, s.plate, s.fiberID, s.mjd, p.extinction_g, p.extinction_g, p.extinction_g, \
-    p.type, p.extinction_g, p.extinction_g, p.extinction_g \
+    p.extinction_g, s.elodieTEff, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, \
+    p.obj, s.plate, s.fiberID, s.mjd, p.extinction_g, p.extinction_g, p.psfMag_u, \
+    p.psfMag_g, p.psfMag_r, p.psfMag_i, p.psfMag_z \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
     WHERE psfMag_r BETWEEN 15.0 and 19.0 \
@@ -85,9 +85,10 @@ def sort_data():
 
     return plate, mjd, fiber, extinction, objid
 
-plate, mjd, fiber, extinction, objid = sort_data()
+#plate, mjd, fiber, extinction, objid = sort_data()
 #print len(plate) #check number of stars surveyed
 
+sys.exit()
 ########take flux, wl data from fits files##########
 def getdata(i):
         
