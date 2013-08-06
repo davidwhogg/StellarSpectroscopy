@@ -212,7 +212,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,
                 eqw = flux/cont1
 
 
-                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[z], plate[zz], mjd[zz], fiber[zz], len(fail_flag)]) #grouped_data
+                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], len(fail_flag)]) #grouped_data
         print "ok done", z
     
     return data 
