@@ -12,7 +12,7 @@ sys.path.append(directory)
 import sqlcl
 import pickle
 
-f=open("newlinesnewer","rb")
+f=open("datanewdr8b","rb")
 data=pickle.load(f)
 f.close()
 #Get the data via SQL query (we really only need plate-mjd-fiber for now)
@@ -88,7 +88,6 @@ def sort_data():
 #plate, mjd, fiber, extinction, objid = sort_data()
 #print len(plate) #check number of stars surveyed
 
-sys.exit()
 ########take flux, wl data from fits files##########
 def getdata(i):
         
@@ -139,11 +138,8 @@ def getdata(i):
     
     loglam=np.array(loglam)
     lam=10**loglam
-    lamcor=zeros(len(lam))
-    for k in range(len(lam)): #redshift correction
-        lamcor[k]=float(lam[k])/float((1+zm)) 
-        
-    wls[0]=lamcor
+    
+    wls[0]=lam
     sn2=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
     sn2s[0]=sn2
     errormag=1/sn2
@@ -157,33 +153,47 @@ def getdata(i):
             badpoints.append(wls[0][v])
             
     tab.close()
-    return wls, fluxes, sn2s, ivars, badpoints
+    return wls, fluxes, sn2s, ivars, badpoints, zm
 
 #wls, fluxes, sn2s, sigmas, badpoints = getdata(8)
 
 
 ########### Plot spectra ######## (need grouped_data) - can only plot 
 def plot(n):
-    #if data[0][n][7]!=mjd[n]:
-        #print "mjd mismatch!"
-        #sys.exit()
+    ###Correct for redshifts 
+    lamcor=zeros(len(wls[0]))
+    lamcorb=zeros(len(wls[0])) # "negative" correction
+    
+    for k in range(len(wls[0])): 
+        lamcor[k]=float(wls[0][k])/float(1+zm) 
+        lamcorb[k]=float(wls[0][k])/float(1-zm)
+        
+    ###Fit spline to uncorrected wavelengths
     s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
-    xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
+    
+    xs=wls[0]
+    #xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
+    #xs2=wls[0]
+
     # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
     peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970] 
-    for w in range(1): #for each peak location..
-
+    for w in range(1): #for just first peak of H-d
+        '''#Add EW calculation data onto graphs (optional)
         cont1=data[w][n][0]
         cont_err=data[w][n][1]
         flux=data[w][n][2]
         flux_err=data[w][n][3]
         eqw=data[w][n][4]
-        peak_loc=peaks[w]
-        ext=data[w][n][5]
+        ext=data[w][n][5]'''
 
-        flux_domain = [x for x in xs if x<peak_loc+10 and x>peakloc-10] #neighborhood of 20A
-        ys = s(flux_domain)
-        plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
+        peak_loc=peaks[w]
+
+        #Shade in integral (currently disabled)
+        #flux_domain = [x for x in xs if x<peak_loc+10 and x>peak_loc-10] #neighborhood of 20A
+        #ys = s(flux_domain)
+        #plt.fill_between(flux_domain, ys, cont1, color='gray', alpha=0.5)
+
+        #Add vertical lines for identification of regions        
         plt.axvline(x=peak_loc+10, color='b')
         plt.axvline(x=peak_loc-10, color='b')
         plt.axvline(x=peak_loc, color='r')
@@ -192,49 +202,52 @@ def plot(n):
         #plt.axvline(x=peak_loc-20, color='k')
         #plt.axvline(x=peak_loc+20, color='k')
 
+        #Add continuum horizontal lines 
+        #plt.plot(np.array([peak_loc-100,peak_loc-20]),np.array([cont1]*2), color='k')
+        #plt.plot(np.array([peak_loc+20,peak_loc+100]),np.array([cont1]*2), color='k')
 
-        plt.plot(np.array([peak_loc-100,peak_loc-20]),np.array([cont1]*2), color='k')
-        plt.plot(np.array([peak_loc+20,peak_loc+100]),np.array([cont1]*2), color='k')
-
-        #plt.plot(np.array([3850,3880]),np.array([cont1]*2), color='k')
-        #plt.plot(np.array([3900,3920]),np.array([cont1]*2), color='k')
-
-        #countdown = [x for x in badpoints if x<peak_loc and x>peaks[w]-100]
-        #countup = [x for x in badpoints if x>peak_loc and x<peaks[w]+100]
-        #print peaks[w], "number of non-zero ivar pixels in LHS: ", len(countdown)
-        #print peaks[w], "number of non-zero ivar pixels in RHS: ", len(countup)
     k=0 #[hd, hg, hb,  TiO,  Na,  He-I,   K,    H ]
-    '''s1="Cont: "+str(round(data[k][n][0],1)) #h-delta
-    s2="Err: "+str(round(data[k][n][1],3))
-    s3="Flux: "+str(round(data[k][n][2],1))
-    s4="Err: "+str(round(data[k][n][3],1))
-    s5="EW: "+str(round(data[k][n][4],2)) 
-    plt.text(0.05,0.2, s1, fontsize=11, transform = ax.transAxes)
+    #s1="Cont: "+str(round(data[k][n][0],1)) #h-delta
+    #s2="Err: "+str(round(data[k][n][1],3))
+    #s3="Flux: "+str(round(data[k][n][2],1))
+    #s4="Err: "+str(round(data[k][n][3],1))
+    #s5="EW: "+str(round(data[k][n][4],2))
+    s6="Redshift: "+str(zm)
+    plt.text(0.8,0.05, s6, fontsize=11, ha='right', transform = ax.transAxes)
+    s7="Approx. velocity: "+str(int(zm*3*10**8))+" m/s"
+    plt.text(0.2, 0.05, s7, fontsize=11, ha='left', transform = ax.transAxes)
+    '''plt.text(0.05,0.2, s1, fontsize=11, transform = ax.transAxes)
     plt.text(0.05,0.1, s2, fontsize=11, transform = ax.transAxes)
     plt.text(0.95,0.24, s3, fontsize=11, ha='right', transform = ax.transAxes)
     plt.text(0.95,0.16, s4, fontsize=11, ha='right', transform = ax.transAxes)
     plt.text(0.95,0.08, s5, fontsize=11, ha='right', transform = ax.transAxes)
     '''
-    plt.step(wls[0],fluxes[0]+sigmas[0], 'g', linewidth=0.4, alpha=1)
-    plt.step(wls[0],fluxes[0]-sigmas[0],  'g', linewidth=0.4, alpha=1)
-    plt.step(xs,s(xs),'b', linewidth=0.5, alpha=1)
-    #plot ivar=0 points
+
+    #Plot errors
+    #plt.step(xs,s(xs)+sigmas[0],'g',linewidth=0.4, alpha=1)
+    #plt.step(xs,s(xs)-sigmas[0],'g',linewidth=0.4, alpha=1)
+
+    #Plot interpolations
+    plt.step(lamcor,s(lamcor),'b', linewidth=0.5, alpha=1)
+    plt.step(lamcorb,s(lamcorb),'r',linewidth=0.5, alpha=1)
+    
+    #plot error=inf points
     plt.scatter(np.array(badpoints), np.array(s(badpoints)), c='r', marker='o')    
-        
+
+       
     #plt.xlabel("wavelengths (A)")
     #plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 
+    #Various formatting
     plt.tight_layout()
-
     plateid=data[0][n][6]
     mjdid=data[0][n][7]
     fiberid=data[0][n][8]
     plt.title(str(plateid)+"-"+str(mjdid)+"-"+str(fiberid)+".fits")
     plt.grid(True)
-    
     plt.xlim(peak_loc-139,peak_loc+139)
+    plt.ylim(0,2*np.median(s(xs)))
     return
-sys.exit()
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
@@ -245,11 +258,11 @@ succ=[]
 fail=[]
 
 for i in range(5200):
-    if data[5][i][3]>500:
+    if data[0][i][3]>500:
         fail.append(i)
 print len(fail), "fail"            
 for i in range(5200):
-    if data[5][i][4]<-2 and data[0][i][3]<100:
+    if data[0][i][4]<-2 and data[0][i][3]<100:
         succ.append(i)
 print len(succ), "succ"
 
@@ -257,36 +270,36 @@ print len(succ), "succ"
 # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
 peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970]
 
-fig, axs = plt.subplots(nrows=3, ncols=3, sharex=True)
-for i in range(1,10):
-    n=succ[i-1]#+240#mum[i-1]
-    j=330+i
+fig, axs = plt.subplots(nrows=5, ncols=1, sharex=True)
+for i in range(1,6):
+    n=succ[i+121]#+240#mum[i-1]
+    j=510+i
     ax=plt.subplot(j)
-    wls, fluxes, sn2s, sigmas, badpoints = getdata(n) #or succs
+    wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(n) #or succs
     plot(n)
-    if i in range(1,7):
+    if i in range(1,5):
         plt.setp(ax.get_xticklabels(), visible=False)
     else:
         plt.setp(ax.get_xticklabels(), visible=True)
     
     
-    if i==4:
+    if i==3:
         plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
-    elif i==8:
+    elif i==5:
         plt.xlabel("Wavelengths, Ang")
     else:
         pass
     
  
 
-fig.suptitle('Examples with He-I', size='large')
+fig.suptitle('Examples with H-d', size='large')
 fig.subplots_adjust(left=0.05, right=0.95, wspace = 0.15, hspace=0.15)
 
 #plt.setp([a.get_xticklabels() for a in fig.axes[:-3]], visible=False)
 
 plt.show()
 
-
+'''
 print "The SQL Query has already been assembled and the variables plate, mjd, fiber are ready to be called"
 print "Pick any number i between 0 and ", len(plate), " and try the functions: "
-print "plot(i)"
+print "plot(i)"'''
