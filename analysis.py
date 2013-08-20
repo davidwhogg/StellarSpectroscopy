@@ -16,6 +16,16 @@ f=open("datanewdr8b","rb")
 data=pickle.load(f)
 f.close()
 #Get the data via SQL query (we really only need plate-mjd-fiber for now)
+def deredshift(wls, fluxes, zm, badpoints):
+    lamcorb=wls[0]/(1.0-zm)
+    s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
+    xs=wls[0]    
+    ys=s(lamcorb)
+    bady=s(badpoints)
+    badx=badpoints
+    return xs, ys, badx, bady
+
+    
 def sort_data():
     objid=[]
     extinction=[]
@@ -160,21 +170,23 @@ def getdata(i):
 
 ########### Plot spectra ######## (need grouped_data) - can only plot 
 def plot(n):
-    ###Correct for redshifts 
+    '''###Correct for redshifts 
     lamcor=zeros(len(wls[0]))
     lamcorb=zeros(len(wls[0])) # "negative" correction
     
-    for k in range(len(wls[0])): 
-        lamcor[k]=float(wls[0][k])/float(1+zm) 
-        lamcorb[k]=float(wls[0][k])/float(1-zm)
+    
+    lamcor=wls[0]/(1.0+zm)
+    lamcorb=wls[0]/(1.0-zm)
+        #lamcor[k]=float(wls[0][k])/float(1+zm) 
+        #lamcorb[k]=float(wls[0][k])/float(1-zm)
         
     ###Fit spline to uncorrected wavelengths
     s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
     
     xs=wls[0]
     #xs=linspace(min(wls[0]),max(wls[0]),len(wls[0])*10)
-    #xs2=wls[0]
-
+    #xs2=wls[0]'''
+    xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints)
     # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
     peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970] 
     for w in range(1): #for just first peak of H-d
@@ -228,11 +240,11 @@ def plot(n):
     #plt.step(xs,s(xs)-sigmas[0],'g',linewidth=0.4, alpha=1)
 
     #Plot interpolations
-    plt.step(lamcor,s(lamcor),'b', linewidth=0.5, alpha=1)
-    plt.step(lamcorb,s(lamcorb),'r',linewidth=0.5, alpha=1)
+    plt.step(xs,ys,'b', linewidth=0.5, alpha=1)
     
     #plot error=inf points
-    plt.scatter(np.array(badpoints), np.array(s(badpoints)), c='r', marker='o')    
+        
+    plt.scatter(badx, bady, c='r', marker='o')    
 
        
     #plt.xlabel("wavelengths (A)")
@@ -246,14 +258,14 @@ def plot(n):
     plt.title(str(plateid)+"-"+str(mjdid)+"-"+str(fiberid)+".fits")
     plt.grid(True)
     plt.xlim(peak_loc-139,peak_loc+139)
-    plt.ylim(0,2*np.median(s(xs)))
+    plt.ylim(0,2*np.median(ys))
     return
 '''plt.subplots(nrows=3, ncols=3)
 plt.xlabel("Wavelengths, Ang")
 plt.ylabel("flux (E-17 ergs/s/cm^2/A)")
 plt.title("Examples of failures")'''
 
-
+if __main__:
 succ=[]
 fail=[]
 
@@ -270,14 +282,19 @@ print len(succ), "succ"
 # peaks are [hd, hg, hb,  TiO,  Na,  He-I,   K,    H ] [6306 O-I]
 peaks=[4102, 4340, 4861, 5582, 5896, 3890, 3934, 3970]
 
-fig, axs = plt.subplots(nrows=5, ncols=1, sharex=True)
-for i in range(1,6):
-    n=succ[i+121]#+240#mum[i-1]
-    j=510+i
-    ax=plt.subplot(j)
+#fig, axs = plt.subplots(nrows=5, ncols=1, sharex=True)
+wlsall=[]
+for i in range(1,20):
+    n=succ[i+21]#+240#mum[i-1]
+    #j=510+i
+    #ax=plt.subplot(j)
     wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(n) #or succs
-    plot(n)
-    if i in range(1,5):
+    a= min(np.where(wls[0]>3800)[0])
+    print a, wls[0][a]
+    b=max(np.where(wls[0]<8000)[0])
+    print b-a
+    #plot(n)
+    '''if i in range(1,5):
         plt.setp(ax.get_xticklabels(), visible=False)
     else:
         plt.setp(ax.get_xticklabels(), visible=True)
@@ -288,7 +305,7 @@ for i in range(1,6):
     elif i==5:
         plt.xlabel("Wavelengths, Ang")
     else:
-        pass
+        pass'''
     
  
 
