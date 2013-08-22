@@ -1,4 +1,15 @@
 
+def deredshift(wls, fluxes, zm, badpoints, z):
+
+    s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
+    lamcorb=wls[z]/(1.0-zm)
+    xs=wls[z]    
+    ys=s(lamcorb)
+    
+    badx=np.array(badpoints)/(1.0-zm)
+    bady=s(badx)
+    return xs, ys, badx, bady
+
 #Get the data via SQL query (we really only need plate-mjd-fiber for now)
 def sort_data():
     objid=[]
@@ -123,50 +134,48 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
         lam=10**loglam
         ivar=tabs[j][1].data.field(2)
         ivars.append(ivar)
-        lamcor=zeros(len(lam))
-        for k in range(len(lam)): #redshift correction
-            lamcor[k]=float(lam[k])/float((1+zm)) 
+         
             
-        wls.append(lamcor)
+        wls.append(lam)
         sn2=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
         sn2s.append(sn2)
         errormag=1/sn2
         errormags.append(errormag)
-        bad=[]
+        #bad=[]
         sigma=np.zeros(len(ivars[j]))
 
         for v in range(len(ivars[j])):
             if ivars[j][v]!=0:
                 sigma[v]=1/sqrt(ivars[j][v])
             elif ivars[j][v]==0:
-                bad.append(wls[j][v])
+                badpoints.append(wls[j][v])
                 sigma[v]=np.inf
         sigmas.append(sigma)
-        badpoints.append(bad)
+        #badpoints.append(bad)
         tab.close()
-    return wls, fluxes, sn2s, sigmas, badpoints
+    return wls, fluxes, sn2s, sigmas, badpoints, zm
 
 
 ##### Calculate cont, eqw, flux values ###########
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
-    f=open("datanewdr8b", "rb")
-    data=pickle.load(f)
-    f.close()
-    #data = [[],[],[],[],[],[],[]]
-    for z in range(b-a): 
-        s = UnivariateSpline(wls[z], fluxes[z], k=3, s=0)
-        xs=linspace(min(wls[z]),max(wls[z]),len(wls[z])*10)
-                
+    #f=open("datanewdr8b", "rb")
+    #data=pickle.load(f)
+    #f.close()
+    data = [[],[],[],[],[],[],[]]
+
+    for z in range(b-a):
+        xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints, z)
+        
 
         for w, line in enumerate(lines): #for each peak location up to Na-5896
             good = (sigmas[z]!=np.inf)
-            cont_prim = (wls[z]>line[2][0])*(wls[z]<line[2][1])
-            cont_sec = (wls[z]>line[2][2])*(wls[z]<line[2][3])
+            cont_prim = (xs>line[2][0])*(xs<line[2][1])
+            cont_sec = (xs>line[2][2])*(xs<line[2][3])
             cont_indx = good*(cont_sec+cont_prim) #cont ignores +-20A from peak
             
-            flux_indx = (wls[z]>line[1]-10)*(wls[z]<line[1]+10) #flux is +-10A from peak
+            flux_indx = (xs>line[1]-10)*(xs<line[1]+10) #flux is +-10A from peak
 
             zz=z+a #or z+2700  ##need this for indexing subsequent parts
 
@@ -179,14 +188,14 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,
             else:
 
                 ##Calculate Continuum
-                cont_zone=wls[z][(cont_indx*(np.logical_not(flux_indx)))]
-                cont_est=s(cont_zone) #apply spline to wavelengths
+                cont_zone=xs[(cont_indx*(np.logical_not(flux_indx)))]
+                cont_est=ys[(cont_indx*(np.logical_not(flux_indx)))] #apply spline to wavelengths
                 cont1=np.median(cont_est) #take the median
 
                 #Find bad points
                 bad = np.logical_not(good)
-                fail_indx = bad*(wls[z]>line[1]-100)*(wls[z]<line[1]+100)
-                fail_flag=wls[z][fail_indx]
+                fail_indx = bad*(xs>line[1]-100)*(xs<line[1]+100)
+                fail_flag=xs[fail_indx]
 
                 #Calculate cont error
                 if float(sum(good*cont_prim))/sum(cont_prim)<0.25 or float(sum(good*cont_sec))/sum(cont_sec)<0.25:
@@ -197,9 +206,9 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,
                 
                 
                 #Calculate Flux
-                flux_zone=wls[z][flux_indx]
-                ys = s(flux_zone)
-                ys_corr = ys-cont1 #subtract continuum
+                flux_zone=xs[flux_indx]
+                ys_a = ys[flux_indx]
+                ys_corr = ys_a-cont1 #subtract continuum
                 step=(flux_zone[-1]-flux_zone[0])/(float(len(flux_zone)-1)) #take average
                 flux = 0.5*step*(2*sum(ys_corr)-ys_corr[0]-ys_corr[len(ys_corr)-1]) #trap rule
         
@@ -272,9 +281,9 @@ if __name__=="__main__":
         ["H",3970,[3850,3880,3900,3920]]\
         ]
     #downloadfits() #can be commented out if already downloaded
-    wls, fluxes, sn2s, sigmas, badpoints = getdata(5400,7541, plate, mjd, fiber)
-    data = calc(5400,7541,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
-    f2=open("datanewdr8b","wb")    
+    wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(0,2700, plate, mjd, fiber)
+    data = calc(0,2700,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
+    f2=open("datanewdr8bb","wb")    
     pickle.dump(data,f2) 
     f2.close()
     
