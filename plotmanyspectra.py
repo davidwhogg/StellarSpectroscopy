@@ -180,22 +180,7 @@ def plot(n):
     plt.xlim(3800,9000)
     plt.ylim(0, 1.98*np.median(ys))
     return
-'''
-exts=[]
-for i in range(5204):
-    exts.append(data[0][i][5])
 
-low=[]
-high=[]
-   
-for i in range(5200):
-    if data[0][i][5]<stats.scoreatpercentile(exts,20):
-        low.append(i)
-    elif data[0][i][5]>stats.scoreatpercentile(exts,75):
-        high.append(i)
-
-
-'''
 ##################################################
 #######################################
 
@@ -371,8 +356,27 @@ if __name__=="__main__":
 
 
     gi=magg-magi
+    sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxerrs)
+
+
 
 sys.exit()
+'''
+exts=[]
+for i in range(5204):
+    exts.append(data[0][i][5])
+
+low=[]
+high=[]
+   
+for i in range(5200):
+    if data[0][i][5]<stats.scoreatpercentile(exts,20):
+        low.append(i)
+    elif data[0][i][5]>stats.scoreatpercentile(exts,75):
+        high.append(i)
+
+
+'''
 '''## work with fluxavg, globalwls
 for i in range(1):
     for j in range(1):
