@@ -26,7 +26,7 @@ def deredshift(wls, fluxes, zm, badpoints):
 
 
 ########take flux, wl data from fits files##########
-def getdata():
+def getdata(plate,mjd,fiber):
         
     tabs=[0] #we only get one entry each time, we overwrite each time
     fluxes=[0]
@@ -184,7 +184,7 @@ def plot(n):
 ##################################################
 #######################################
 
-def sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxerrs)
+def sort(hdew, gi, mjds, plates, fibers, extinction, conts, conterrs, fluxs, fluxerrs):
     ind=argsort(hdew)
     sorthdew=zeros(len(gi))
     sortgi=zeros(len(gi))
@@ -199,17 +199,17 @@ def sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxer
     for i in range(len(gi)):
         sorthdew[i]=hdew[ind[i]]
         sortgi[i]=gi[ind[i]]
-        sortmjd[i]=int(mjd[ind[i]])
-        sortplate[i]=int(plate[ind[i]])
-        sortfiber[i]=int(fiber[ind[i]])
+        sortmjd[i]=int(mjds[ind[i]])
+        sortplate[i]=int(plates[ind[i]])
+        sortfiber[i]=int(fibers[ind[i]])
         sortext[i]=extinction[ind[i]]
         sortconts[i]=conts[ind[i]]
         sortconterrs[i]=conterrs[ind[i]]
         sortfluxs[i]=fluxs[ind[i]]
         sortfluxerrs[i]=fluxerrs[ind[i]]
-    plate=sortplate
-    mjd=sortmjd
-    fiber=sortfiber
+    plates=sortplate
+    mjds=sortmjd
+    fibers=sortfiber
     gi=sortgi
     hdew=sorthdew
     ext=sortext
@@ -217,7 +217,7 @@ def sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxer
     conterr=sortconterrs
     flux=sortfluxs
     fluxerr=sortfluxerrs
-    array=[plate,mjd,fiber,hdew,ext,cont,conterr,flux,fluxerr]
+    array=[plates,mjds,fibers,hdew,ext,cont,conterr,flux,fluxerr]
     alldata=[[],[],[],[],[],[],[],[],[]]
     for i in range(9): #9
         indexstart=377+i*754
@@ -267,7 +267,7 @@ def sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxer
                 plate=zone2[0][o]
                 mjd=zone2[1][o]
                 fiber=zone2[2][o]
-                wls, fluxes, sn2s, sigmas, badpoints, zm = getdata()
+                wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(plate,mjd,fiber)
                 xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints)
                 
                 #wlsall.append(wls)
@@ -291,13 +291,13 @@ def sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxer
 
         for m in range(9):
             j=911+m
-            ax=plt.subplot(j)        
+            ax=plt.subplot(j)
 
             #plt.step(xs[a:b],avgsall[m], 'b')
             #plt.step(xs[a:b],avgavg, 'k')
             plt.step(xs[a:b],avgsall[m]/avgavg, 'b')
             plt.xlim(3890,7500)
-            plt.ylim(0,2*np.median(avgsall[m]/avgavg))
+            plt.ylim(0.9*np.median(avgsall[m]/avgavg),1.1*np.median(avgsall[m]/avgavg))
             plt.tight_layout()
             plt.grid(True)
 
@@ -316,10 +316,10 @@ def sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxer
         fig.set_size_inches(18.0,12.0)
         plt.savefig("spectra_avg_ratio_"+str(i)+".png")
         print i
-        return
+    return
     
 if __name__=="__main__":
-    f=open("datanewdr8b","rb")
+    f=open("datanewdr8bb","rb")
     data=pickle.load(f)
     f.close()
 
@@ -332,10 +332,11 @@ if __name__=="__main__":
     magr=np.array(array1[16])
     magi=np.array(array1[17])
     magz=np.array(array1[18])
-    plate=np.array(array1[9])
-    mjd=np.array(array1[11])
-    fiber=np.array(array1[10])
-
+    plates=np.array(array1[9])
+    mjds=np.array(array1[11])
+    fibers=np.array(array1[10])
+    
+    
     #platesort=[x for (y,x) in sorted(zip(magg-magi,plate))]
     hdew=[]
     conts=[]
@@ -356,11 +357,10 @@ if __name__=="__main__":
 
 
     gi=magg-magi
-    sort(hdew, gi, mjd, plate, fiber, extinction, conts, conterrs, fluxs, fluxerrs)
+    sort(hdew, gi, mjds, plates, fibers, extinction, conts, conterrs, fluxs, fluxerrs)
 
 
 
-sys.exit()
 '''
 exts=[]
 for i in range(5204):
