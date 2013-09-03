@@ -58,6 +58,12 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
     AND (psfMag_i-psfmag_z) between 0.02-0.08 and 0.02+0.08 
     ORDER BY extinction_g DESC"\\
 \end{verbatim}
+\section{Redshift correction}
+- The wavelengths were corrected for redshift using the value recorrded from HDU2 (copy of SpecObj table from SDSS)\\
+\begin{figure}
+\includegraphics[width=8cm]{../splines_correct}\\
+\caption{Red line shows redshift correction; blue shows the reversed correction.}
+\end{figure}
 
 \begin{figure}
 \includegraphics[width=8cm]{../035}\includegraphics[width=8cm]{../355}\\
@@ -68,9 +74,9 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 - The equivalent width is defined by the width such that the area of a rectangle with a height of the continuum value is equal to the area in a spectral line.\\
 - We want to use equivalent widths because they essentially measure flux in units of continuum. This means it gives the fraction of light absorbed, instead of the actual number of photons. This means that even if two stars are of different brightness, if viewed through the same interstellar medium (e.g. dust) they will have similar equivalent widths. Moreover, the equivalent width is independent of instrumental resolution and so allows for low-resolution spectra to be used.\\
 - However, the calibration of the spectra is suspect - the atmosphere might be introducing unknown wavelength-dependent multiplicative factors, so new values need to be generated using the SDSS spectra.\\
-- The spectra are first corrected for redshift using the redshift value from HDU 2 (copy of specObj table from SDSS).\\
-- A cubic spline is used to interpolate the spectrum. To plot the spline, I use a step size one-tenth of the step size of the wavelengths in the FITS file. \\
-- Near the location of each peak (based on the theoretical location), a neighborhood of $\pm$30$\AA$ is taken and the median of this is taken as the continuum. The minimum value within this neighborhood is taken as the location of the peak - this value is recorded for later use - and a $\pm$10$\AA$ neighborhood is taken as the domain for the flux integration.\\
+- The spectra are first corrected for redshift.\\
+- A cubic spline is used to interpolate the spectrum over a common rest-wavelength grid.\\
+- Near the location of each peak, a neighborhood of $\pm$100$\AA$ is taken, excluding a $\pm$10$\AA$ neighborhood (which will be used for flux integration) and the median of this is taken as the continuum, and a $\pm$10$\AA$ neighborhood is taken as the domain for the flux integration.\\
 - The flux is numerically integrated over this 20$\AA$ range, using the trapezium rule, and the ratio of flux/continuum gives the equivalent width value.\\
 - The [continuum, flux, equivalent width, peak location] is taken for a given peak (e.g. H-$\beta$) for each spectra and collected into one array; then this is repeated for all the absorption lines used and collected into one array. This array can be stored in a binary text file using the "pickle" function. \\
 \begin{figure}
@@ -195,4 +201,22 @@ $Error_{flux} = h\sqrt{1\sigma_1^2+4\sigma_2^2+ ... + 4\sigma_i^2 + ... + 4\sigm
 - If the filter range is increased from $\pm$0.08 to $\pm$0.16, the query returns 17452 stars. This includes the 5204 stars from the original query, and as these FITS files do not need to be re-downloaded, the remaining 12248 FITS files require 6 hours to download.\\
 - As each FITS file is approximately 500KB-2MB in size, a typical computer can only process 2000-3000 FITS files at a time due to memory constraints. Even if the FITS files are closed again, Python does not reallocate the memory and the garbage-collection module did not help either. As a result, it is best to do the EW computation in blocks of 2000-3000, and to save each array each time as a binary text file, then to load it again and append the next block onto it.\\
 - Each block of 2700 takes around 30 minutes to append the FITS files and compute the EW.
+
+
+\section{Ratios of spectra; sorted via EW and extinction}
+- The 7541 stars returned by the SQL query using DR8 were processed using the above EW calculation method.\\
+- They were sorted by EW and 9 quantiles were taken, each containing 754 stars: between the 5th-15th percentiles, 15th-25th etc. all the way up to 85th-95th.\\
+- Then each quantile was sorted by extinction, and again 9 quantiles, each containing 75 stars, were taken between the 5th-15th percentiles, 15th-25th, etc. all the way up to 85th-95th percentile in extinction.\\
+- This yields 81 quantiles, each containing 75 stars, sorted by extinction after sorting for EW.\\
+- For each quantile, all the fluxes corresponding to wavelengths between 3900A and 8000A were taken and everything else was discarded: this meant that all the measurements had a common wavelength array.\\
+- The "average spectrum", consisting of averaging the total flux measured at each of the wavelength measurements, was plotted. This was sorted by EW, i.e. for each EW quantile, 9 plots were made corresponding to each extinction quantile and put into one figure.\\
+- For each EW quantile, the average of the 9 plots, i.e. the average of all 754 spectra within that quantile, was calculated. The ratio of each of the 9 plots to this average was plotted.\\
+\begin{figure}
+\includegraphics[width=12cm]{../spectra_avg_8}\\
+\caption{Panel of 9 plots of the average spectra of each extinction quantile, all of one particular EW quantile.}
+\end{figure}
+\begin{figure}
+\includegraphics[width=12cm]{../spectra_avg_ratio_8}\\
+\caption{Panel of 9 plots of the ratio of the average spectra of each extinction quantile to the average spectra of all extinction values within one particular EW quantile.}
+\end{figure}
 \end{document}
