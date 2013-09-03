@@ -160,10 +160,10 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
-    #f=open("datanewdr8b", "rb")
-    #data=pickle.load(f)
-    #f.close()
-    data = [[],[],[],[],[],[],[]]
+    f=open("datanewdr8bb", "rb")
+    data=pickle.load(f)
+    f.close()
+    #data = [[],[],[],[],[],[],[]]
 
     for z in range(b-a):
         xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints, z)
@@ -281,8 +281,8 @@ if __name__=="__main__":
         ["H",3970,[3850,3880,3900,3920]]\
         ]
     #downloadfits() #can be commented out if already downloaded
-    wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(0,2700, plate, mjd, fiber)
-    data = calc(0,2700,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
+    wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(5400,7541, plate, mjd, fiber)
+    data = calc(5400,7541,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
     f2=open("datanewdr8bb","wb")    
     pickle.dump(data,f2) 
     f2.close()
