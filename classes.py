@@ -25,8 +25,10 @@ class datas:
         self.conterrs=conterrs
         self.fluxs=fluxs
         self.fluxerrs=fluxerrs
-    def sort(self):
-        ind=argsort(self.hdew)
+    def sort(self,column):
+        #column is a variable which should = one of the other columns
+        #for the first sort, column=hdew 
+        ind=argsort(column)
         sorthdew=zeros(len(self.gi))
         sortgi=zeros(len(self.gi))
         sortplate=zeros(len(self.gi),int)
@@ -59,14 +61,20 @@ class datas:
         flux=sortfluxs
         fluxerr=sortfluxerrs
         array=[plates,mjds,fibers,hdew,ext,cont,conterr,flux,fluxerr]
+        return array
+
+    def compiledsort(self,r,array):
+        #column in this case is extinction, so r=4
+        #0=plates, 1=mjds, 2=fibers, etc
         alldata=[[1],[1],[1],[1],[1],[1],[1],[1],[1]]
-        for i in range(9): #9
-            indexstart=377+i*754
+        
+        for i in range(9): 
+            indexstart=377+i*754 #there are 7541 stars so 10% is 754
             zone=[]
             for j in range(len(array)): #len=5
                 zone.append(array[j][indexstart:indexstart+754])
 
-            ind2=argsort(zone[4])
+            ind2=argsort(zone[r])
             sortplate2=zeros(754,int)
             sortmjd2=zeros(754,int)
             sortfiber2=zeros(754,int)
@@ -89,7 +97,7 @@ class datas:
                 
             array2=[sortplate2,sortmjd2,sortfiber2,sortext2,sorthdew2,sortconts2,sortconterrs2,sortfluxs2,sortfluxerrs2]
             alldata[i]=array2 #alldata collates each sorted quantile.
-        return alldata, array
+        return alldata
     def getdata(self,plate,mjd,fiber):
             
         tabs=[0] #we only get one entry each time, we overwrite each time
@@ -185,7 +193,10 @@ fluxerrs=np.array(fluxerrs)
 
 ### Begin sorting: collect relevant plate-fiber-mjd and ext information
 a=datas(hdew, gi, mjds, plates, fibers, extinction, conts, conterrs, fluxs, fluxerrs)
-alldata, array = a.sort()
+arrayo = a.sort(hdew)
+alldata = a.compiledsort(4,array)
+
+
 #alldata [i] has each EW quantile's data
 superset=[]
 for k in range(9): #within alldata
@@ -284,6 +295,6 @@ for l in range(9):
     plt.suptitle("Ratio of fluxes to average fluxes ranked by extinction, with EWs between the "+str(l*10+5)+"th to "+str(l*10+15)+"th percentile")
     fig.subplots_adjust(left=0.05, right=0.95, wspace = 0.15, hspace=0)
     fig.set_size_inches(18.0,12.0)
-    plt.savefig("spectra_avg_ratio_"+str(l)+".png")
+    plt.savefig("spectra_avg_ratio_a"+str(l)+".png")
 
 
