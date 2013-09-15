@@ -219,4 +219,32 @@ $Error_{flux} = h\sqrt{1\sigma_1^2+4\sigma_2^2+ ... + 4\sigma_i^2 + ... + 4\sigm
 \includegraphics[width=12cm]{../spectra_avg_ratio_8}\\
 \caption{Panel of 9 plots of the ratio of the average spectra of each extinction quantile to the average spectra of all extinction values within one particular EW quantile.}
 \end{figure}
+
+\section{Linear Fitting}
+- At each particular wavelength, all the flux, H-delta EW, extinction (g), and g-band magnitude were collected. \\
+- A linear model was fitted to find three coefficients:\\
+observed flux = a$\times$Brightness + b$\times$H-$\delta$ EW + c$\times$Extinction, where brightness 10$^{-0.4 \times (mag_g - 22.5)}$\\
+- These coefficients were different for each wavelength, and a plot of each coefficient as a function of wavelength was plotted.\\
+\begin{figure}
+\includegraphics[width=12cm]{../coeffs0}\\
+\caption{Coefficients of brightness as a function of wavelength}
+\end{figure}
+\begin{figure}
+\includegraphics[width=12cm]{../coeffs1}\\
+\caption{Coefficients of H-$\delta$ as a function of wavelength}
+\end{figure}
+\begin{figure}
+\includegraphics[width=12cm]{../coeffs2}\\
+\caption{Coefficients of extinction as a function of wavelength}
+\end{figure}
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=6cm]{../residuals}\\
+\caption{Plot of expected flux values using the coefficients, and the actual flux values at 3900$\AA$. The y=x line is plotted to represent a perfect fit.}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=6cm]{../residuals8000}\\
+\caption{Plot of expected flux values using the coefficients, and the actual flux values at 8000$\AA$.}
+\end{subfigure}
+\end{figure}
 \end{document}
