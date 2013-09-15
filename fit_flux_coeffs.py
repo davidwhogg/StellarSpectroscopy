@@ -9,16 +9,10 @@ import os
 import commands
 import pickle
 import pyfits
+import matplotlib.pyplot as plt
 os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
 sys.path.append(directory)
-
-f=open("sorted","rb")
-array1=pickle.load(f)
-f.close()
-f=open("datanewdr8bb","rb")
-data=pickle.load(f)
-f.close()
 
 def deredshift(wls, fluxes, zm, badpoints):
         lamcorb=wls[0]/(1.0-zm)
@@ -79,74 +73,124 @@ def LinearFit(p,xsIn,ysIn,zsIn):#fit both
     return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
 fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux: fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
 
-    
-ext=np.array(array1[1])
-magg=np.array(array1[15])
 
-plates=np.array(array1[9])
-mjds=np.array(array1[11])
-fibers=np.array(array1[10])
+if __name__=="__main__":
+                
+        f=open("sorted","rb")
+        array1=pickle.load(f)
+        f.close()
+        f=open("datanewdr8bb","rb")
+        data=pickle.load(f)
+        f.close()
+        
+        #Get values from pickled document
+        ext=np.array(array1[1])
+        magg=np.array(array1[15])
+        bright= 10**(-0.4*(magg-22.5))
 
-
-hdew=[]
-ext2=[]
-for i in range(len(magg)):
-    ext2.append(data[0][i][5])
-    hdew.append(data[0][i][4])
-    
-if ext2[0]!=ext[0]:
-    print "Error! Data arrays do not align!"
-    sys.exit()
-       
-bright= 10**(-0.4*(magg-22.5))
-
-fit_flux_3900=[]
-fit_flux_8000=[]
-fit_hdew=[]
-fit_ext=[]
-fit_bright=[]
-for i in range(len(plates)):
-    plate=plates[i]
-    mjd=mjds[i]
-    fiber=fibers[i]
-    wls, fluxes, sn2s, ivars, badpoints, zm = getdata(plate,mjd,fiber)
-    xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints)
-    b=(wls[0]>3900)
-    c=(wls[0]<8000)
-    wls_used = np.trim_zeros(c*b*wls[0])
-    flux_used = np.trim_zeros(c*b*ys)
-    if wls_used[0]< 3900.4 and wls_used[-1]>7998.0 :
-        fit_flux_3900.append(flux_used[0])
-        fit_flux_8000.append(flux_used[-1])
-        fit_hdew.append(hdew[i])
-        fit_ext.append(ext[i])
-        fit_bright.append(bright[i])
-        print "yay"
-    else:
-        print "missing flux values", wls_used[0], wls_used[-1]
-        pass
+        plates=np.array(array1[9])
+        mjds=np.array(array1[11])
+        fibers=np.array(array1[10])
 
 
-x0i=[0.5,0.5,0.5] #initial guess
-x0=array(x0i) #optimize requires array
-fit_flux_3900 = np.array(fit_flux_3900)
-fit_flux_8000=np.array(fit_flux_8000)
-fit_hdew=np.array(fit_hdew)
-fit_ext=np.array(fit_ext)
-fit_bright=np.array(fit_bright)
-a1=[]
-b1=[]
-c1=[]
-a2=[]
-b2=[]
-c2=[]
-for j in range(len(fit_bright)):
-    
-    x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright[j],fit_hdew[j],fit_ext[j], fit_flux_3900[j]), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-    x2=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright[j],fit_hdew[j],fit_ext[j], fit_flux_8000[j]), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-    a1.append(x[0][0])
-    b1.append(x[0][1])
-    c1.append(x[0][2])
-    a2.append(x2[0][0])
-    b2.append(x2[0][1])
-    c2.append(x2[0][2])
+        hdew=[]
+
+        #verify that data are ordered correctly
+        ext2=[]
+        for i in range(len(magg)):
+            ext2.append(data[0][i][5])
+            hdew.append(data[0][i][4])
+            
+        if ext2[0]!=ext[0]:
+            print "Error! Data arrays do not align!"
+            sys.exit()
+
+
+        #Standardize flux array length
+        fit_flux= [[] for x in xrange(3120)]
+        fit_hdew=[]
+        fit_ext=[]
+        fit_bright=[]
+
+        for i in range(len(plates)):
+            plate=plates[i]
+            mjd=mjds[i]
+            fiber=fibers[i]
+            wls, fluxes, sn2s, ivars, badpoints, zm = getdata(plate,mjd,fiber)
+            xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints)
+            b=(wls[0]>3900)
+            c=(wls[0]<8000)
+            wls_used = np.trim_zeros(c*b*wls[0])
+            flux_used = np.trim_zeros(c*b*ys)
+            if wls_used[0]< 3900.4 and wls_used[-1]>7998.0:
+                for j in range(len(flux_used)):
+                        fit_flux[j].append(flux_used[j])
+                
+                fit_hdew.append(hdew[i])
+                fit_ext.append(ext[i])
+                fit_bright.append(bright[i])
+            else:
+                print "missing flux values", wls_used[0], wls_used[-1]
+                pass
+
+
+        x0i=[0.1,0.1,0.1] #initial guess
+        x0=array(x0i) #optimize requires array
+        fit_flux_array = np.array(fit_flux)
+        fit_hdew=np.array(fit_hdew)
+        fit_ext=np.array(fit_ext)
+        fit_bright=np.array(fit_bright)
+        aa=fit_ext
+        store_values=[]
+
+        #Fitting
+        for i in range(len(wls_used)): #=3120
+                x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux[i]), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                store_values.append(x[0])
+
+
+        #Save coefficients to file
+        h=open("storedvalues","wb")
+        pickle.dump(store_values,h)
+        h.close()
+
+        #Group and save fitted coefficient to file
+        '''
+        bcoeff=[]
+        hcoeff=[]
+        ecoeff=[]
+
+        for i in range(3120):
+                bcoeff.append(store_values[i][0])
+                hcoeff.append(store_values[i][1])
+                ecoeff.append(store_values[i][2])
+        coeffs=np.array([bcoeff,hcoeff,ecoeff])
+        l=open("coeffs","wb")
+        pickle.dump(coeffs,l)
+        l.close()'''
+
+        #Plot
+        for i in range(3):
+                plt.figure()
+                if i ==0:
+                        plt.title("Coefficient of brightness")
+                elif i==1:
+                        plt.title("Coefficient of H-D EW")
+                else:
+                        plt.title("Coefficient of Extinction")
+                plt.xlabel("Wavelengths, A")
+                plt.ylabel("Coefficient")
+                plt.plot(wls_used,coeffs[i])
+                plt.savefig("coeffs"+str(i))
+                plt.clf()
+                
+                
+        #x2=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+        #plt.scatter(fit_ext*x2[0][2]+fit_bright*x2[0][0]+fit_hdew*x2[0][1],fit_flux_8000,s=10,linewidths=0 )
+        #plt.plot([0,max(fit_flux_8000)],[0,max(fit_flux_8000)],'k')
+        #plt.plot([min(aa),max(aa)],[min(aa)*x[0][2],max(aa)*x[0][2]],color='k')
+        #plt.plot([0,0],[max(fit_hdew),max(fit_hdew)*x[0][0]],color='r')
+
+        #plt.xlabel(str(round(x2[0][0],3))+"*Brightness+"+str(round(x2[0][1],3))+"*H-D EW+"+str(round(x2[0][2],2))+"*Extinction")
+        #plt.ylabel("Flux at 8000A")
+        #plt.show()
