@@ -193,9 +193,8 @@ fluxerrs=np.array(fluxerrs)
 
 ### Begin sorting: collect relevant plate-fiber-mjd and ext information
 a=datas(hdew, gi, mjds, plates, fibers, extinction, conts, conterrs, fluxs, fluxerrs)
-arrayo = a.sort(hdew)
+array = a.sort(hdew)
 alldata = a.compiledsort(4,array)
-
 
 #alldata [i] has each EW quantile's data
 superset=[]
@@ -210,6 +209,28 @@ for k in range(9): #within alldata
         intermediate.append(zone2)
     superset.append(intermediate)
 
+
+import triangle
+for j in range(9):
+    '''if j in range(0,3):
+        ax=plt.subplot(j+911)
+    elif j in range(3,6):
+        ax=plt.subplot(j+921)
+    else:
+        ax=plt.subplot(j+931)
+    '''
+
+    data=[0]*len(superset[0][0][0])
+    for i in range(len(superset[0][0][0])):
+        data[i]=np.array([superset[0][j][3][i],superset[0][j][4][i]])
+    triangle.corner(data, labels=["Extinction", "HD EW"])
+    plt.savefig(str(j)+"reduced_triangle.png")
+
+
+
+
+sys.exit()
+'''
 ### Using sorted plate-fiber-mjd, get spectra for averaging
 averages_supercollection=[]
 avg_avg_supercollection=[]
@@ -250,9 +271,9 @@ for n in range(9):
     avg_avg = avg_fluxavg/9.0
     avg_avg_supercollection.append(avg_avg)
     averages_supercollection.append(averages_collection)
-
-### The above data was pickled and stored for convenience
 '''
+### The above data was pickled and stored for convenience
+
 import pickle
 f=open("avgavg","rb")
 g=open("averages","rb")
@@ -265,8 +286,9 @@ avg_avg_supercollection=pickle.load(f)
 f.close()
 g.close()
 h.close()
-e.close()'''
+e.close()
 
+'''
 ### Plot ratios
 for l in range(9):
     fig, axs = plt.subplots(nrows=9, ncols=1, sharex=True)
@@ -297,4 +319,4 @@ for l in range(9):
     fig.set_size_inches(18.0,12.0)
     plt.savefig("spectra_avg_ratio_a"+str(l)+".png")
 
-
+'''
