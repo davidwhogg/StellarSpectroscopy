@@ -152,7 +152,10 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
                 sigma[v]=np.inf
         sigmas.append(sigma)
         #badpoints.append(bad)
+        del tab[0].data #free up memoery
+
         tab.close()
+        
     return wls, fluxes, sn2s, sigmas, badpoints, zm
 
 
@@ -160,10 +163,10 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
-    f=open("datanewdr8bb", "rb")
-    data=pickle.load(f)
-    f.close()
-    #data = [[],[],[],[],[],[],[]]
+    #f=open("datanewdr8bb", "rb")
+    #data=pickle.load(f)
+    #f.close()
+    data = [[],[],[],[],[],[],[]]
 
     for z in range(b-a):
         xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints, z)
@@ -177,8 +180,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,
             
             flux_indx = (xs>line[1]-10)*(xs<line[1]+10) #flux is +-10A from peak
 
-            zz=z+a #or z+2700  ##need this for indexing subsequent parts
-
+            zz=z+a 
 
             #skip peaks if there are no wavelength-flux data for that peak
             if sum(flux_indx)==0 or sum(cont_indx)==0:
@@ -246,7 +248,7 @@ if __name__=="__main__":
     #data=pickle.load(f)
     #f.close()
     
-
+    
     #Below section is for offline collection of plate/mjd/fiber values for calc()
     '''
     plate=[]
@@ -261,16 +263,17 @@ if __name__=="__main__":
         extinction.append(data[0][i][5])
         objid.append(data[0][i][9])'''
         
-    #plate, mjd, fiber, extinction, objid = sort_data()
-    
-    f=open("sorted","rb")
+    plate, mjd, fiber, extinction, objid = sort_data()
+
+    #below section irrelevant for dr9
+    '''f=open("sorted","rb")
     array1=pickle.load(f)
     f.close()
     plate=array1[9]
     mjd=array1[11]
     fiber=array1[10]
     extinction=array1[1]
-    objid=array1[0]
+    objid=array1[0]'''
     lines=[\
         ["H-delta",4102,[4002,4082,4122,4202]],\
         ["H-gamma",4340,[4240,4320,4360,4440]],\
@@ -281,9 +284,9 @@ if __name__=="__main__":
         ["H",3970,[3850,3880,3900,3920]]\
         ]
     #downloadfits() #can be commented out if already downloaded
-    wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(5400,7541, plate, mjd, fiber)
-    data = calc(5400,7541,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
-    f2=open("datanewdr8bb","wb")    
+    wls, fluxes, sn2s, sigmas, badpoints, zm = getdata(0,len(plate), plate, mjd, fiber)
+    data = calc(0,len(plate),lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber) #save data to file
+    f2=open("datanewdr9","wb")    
     pickle.dump(data,f2) 
     f2.close()
     
