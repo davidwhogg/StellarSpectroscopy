@@ -24,66 +24,59 @@ def deredshift(wls, fluxes, zm, badpoints):
         return xs, ys, badx, bady
 def getdata(plate,mjd,fiber):
         
-    tabs=[0] #we only get one entry each time, we overwrite each time
-    fluxes=[0]
-    sn2s=[0]
-    errormags=[0]
-    wls=[0]
-    ivars=[0]
-    tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plate).zfill(4)+'-'+str(mjd)+'-'+str(fiber).zfill(4)+'.fits')
-    #print "tab success", i
-    tabs[0]=tab
-    j=0 #-2700 ###########
-    if type(tabs[0][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
-        zm= tabs[0][2].data.field(63)[0] #redshift
-        #print i, "63"            
-    elif type(tabs[0][2].data.field(37)[0])==float32:
-        zm= tabs[0][2].data.field(37)[0]
-        print i, "37"
-    else:
-        print "error"
-        
-    flux=tabs[0][1].data.field(0) #flux
-    fluxes[0]=flux
-    loglam=tabs[0][1].data.field(1)
-    ivar=tabs[0][1].data.field(2)
-    ivars[0]=ivar
-    
-    loglam=np.array(loglam)
-    lam=10**loglam
-    lamcor=zeros(len(lam))
-        
-    wls[0]=lam
-    sn2=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
-    sn2s[0]=sn2
-    errormag=1/sn2
-    errormags[0]=errormag
-    badpoints=[]
-    for v in range(len(ivars[0])):
-        if ivars[0][v]!=0:
-            #ivars[0][v]=1/sqrt(ivars[0][v]) convert to Sigma
-                pass
-        elif ivars[0][v]==0:
-            #ivars[0][v]=np.inf
-            badpoints.append(wls[0][v])
-    del tab[0].data #free up memoery
-    tab.close()
-    return wls, fluxes, sn2s, ivars, badpoints, zm
+        tabs=[0] #we only get one entry each time, we overwrite each time
+        fluxes=[0]
+        sn2s=[0]
+        errormags=[0]
+        wls=[0]
+        ivars=[0]
+        tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plate).zfill(4)+'-'+str(mjd)+'-'+str(fiber).zfill(4)+'.fits')
+        #print "tab success", i
+        tabs[0]=tab
+        j=0 #-2700 ###########
+        #if type(tabs[0][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
+        zm= tabs[0][2].data.field("Z") #redshift
+        #zm= tabs[0][2].data.field("Z_NOQSO")
+
+        flux=tabs[0][1].data.field(0) #flux
+        fluxes[0]=flux
+        loglam=tabs[0][1].data.field(1)
+        ivar=tabs[0][1].data.field(2)
+        ivars[0]=ivar
+
+        loglam=np.array(loglam)
+        lam=10**loglam
+        lamcor=zeros(len(lam))
+
+        wls[0]=lam
+        sn2=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
+        sn2s[0]=sn2
+        errormag=1/sn2
+        errormags[0]=errormag
+        badpoints=[]
+        for v in range(len(ivars[0])):
+                if ivars[0][v]!=0:
+                    #ivars[0][v]=1/sqrt(ivars[0][v]) convert to Sigma
+                        pass
+                elif ivars[0][v]==0:
+                    #ivars[0][v]=np.inf
+                    badpoints.append(wls[0][v])
+        del tab[0].data #free up memoery
+        tab.close()
+        return wls, fluxes, sn2s, ivars, badpoints, zm
 
 def LinearFit(p,xsIn,ysIn,zsIn):#fit both
     return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
 fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux: fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
 
-def AnotherFit(p,xsIn,ysIn,zsIn):#fit both
-    return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
-fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,ivars: ivars*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
+fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,fit_ivar: fit_ivar*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
 
 if __name__=="__main__":
                 
-        f=open("sorted","rb")
+        f=open("sorted2","rb")
         array1=pickle.load(f)
         f.close()
-        f=open("datanewdr8bb","rb")
+        f=open("datanewdr9","rb")
         data=pickle.load(f)
         f.close()
         
@@ -95,7 +88,7 @@ if __name__=="__main__":
         plates=np.array(array1[9])
         mjds=np.array(array1[11])
         fibers=np.array(array1[10])
-
+        print len(plates)
 
         hdew=[]
 
@@ -150,18 +143,29 @@ if __name__=="__main__":
         fit_ivar=np.array(fit_ivar)
         store_values=[]
         store_values2=[]
+        sigs=[]
         #Fitting
-        for i in [0,-1]:
+        for i in [0,-1]: 
         #for i in range(len(wls_used)): #=3120
-                #x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux[i]), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-                #store_values.append(x[0])
-                x2=scipy.optimize.leastsq(fitfunc2, x0, args=(AnotherFit,fit_bright,fit_hdew,fit_ext, fit_flux[i],fit_ivar[i]), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                store_values.append(x[0])
+                x2=scipy.optimize.leastsq(fitfunc2, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]),np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 store_values2.append(x2[0])
+                fit_sig=np.zeros(len(fit_ivar[i]))
+
+                for k in range(len(fit_ivar[i])):
+                        if fit_ivar[i][k]==0:
+                                fit_sig[k]=np.inf
+                        else:
+                                fit_sig[k]=1.0/fit_ivar[i][k]
+                sigs.append(fit_sig)
+                                
+        sigs=np.array(sigs) 
 
         #Save coefficients to file
-        '''h=open("storedvaluesAnotherFit","wb")
+        h=open("storedvaluesAnotherFit","wb")
         pickle.dump(store_values2,h)
-        h.close()'''
+        h.close()
         #dd=open("storedvaluescheck","wb")
         #pickle.dump(store_values,dd)
 
@@ -170,26 +174,33 @@ if __name__=="__main__":
         hcoeff=[]
         ecoeff=[]
 
-        for i in range(3120):
+        for i in range(2):
                 bcoeff.append(store_values2[i][0])
                 hcoeff.append(store_values2[i][1])
                 ecoeff.append(store_values2[i][2])
         coeffs=np.array([bcoeff,hcoeff,ecoeff])
-        l=open("coeffsAnotherFit","wb")
-        pickle.dump(coeffs,l)
+        
+        l=open("coeffsAnotherFit","rb")
+        coeffs2=pickle.load(l)
+        
+        #pickle.dump(coeffs,l)
         l.close()
 
+        
+        
         #Plot residuals
         titles=[3900,8000]
         inds=[0,-1]
         for r in range(2):
                 a=inds[r]
                 plt.figure()
-                plt.scatter(fit_ext*ecoeff[a]+fit_bright*bcoeff[a]+fit_hdew*hcoeff[a],fit_flux[a],s=10,linewidths=0 )
+                #plt.scatter(fit_ext*ecoeff[a]+fit_bright*bcoeff[a]+fit_hdew*hcoeff[a],fit_flux[a],s=10,linewidths=0 )
+                plt.errorbar(fit_ext*coeffs2[2][a]+fit_bright*coeffs2[0][a]+fit_hdew*coeffs2[1][a],fit_flux[a], sigs[a], xerr=None, ls='none')
                 plt.plot([0,max(fit_flux[a])],[0,max(fit_flux[a])],'k')
-                plt.xlabel(str(round(bcoeff[a],3))+"*Brightness+"+str(round(hcoeff[a],3))+"*H-D EW+"+str(round(ecoeff[a],2))+"*Extinction")
+                plt.xlabel(str(round(coeffs2[0][a],3))+"*Brightness+"+str(round(coeffs2[1][a],3))+"*H-D EW+"+str(round(coeffs2[2][a],2))+"*Extinction")
                 plt.ylabel("Measured Flux")
                 plt.title("Measured vs Calculated flux at "+str(titles[r])+"A")
+                plt.show()
                 plt.savefig(str(titles[r])+"residuals")
                 plt.clf()
         #Plot coefficients
