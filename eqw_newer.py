@@ -118,26 +118,26 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
         fiberid=fiber[i]
         
         tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
-        tabs.append(tab)
+        #tabs.append(tab)
         j=i-a ###########
-        if type(tabs[j][2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
-            zm= tabs[j][2].data.field(63)[0] #redshift
-        elif type(tabs[j][2].data.field(37)[0])==float32:
-            zm= tabs[j][2].data.field(37)[0]
+        if type(tab[2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
+            zm= tab[2].data.field(63)[0] #redshift
+        elif type(tab[2].data.field(37)[0])==float32:
+            zm= tab[2].data.field(37)[0]
         else:
             print "error"
             
-        flux=tabs[j][1].data.field(0) #flux
+        flux=tab[1].data.field(0) #flux
         fluxes.append(flux)
-        loglam=tabs[j][1].data.field(1)
+        loglam=tab[1].data.field(1)
         loglam=np.array(loglam)
         lam=10**loglam
-        ivar=tabs[j][1].data.field(2)
+        ivar=tab[1].data.field(2)
         ivars.append(ivar)
          
             
         wls.append(lam)
-        sn2=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
+        sn2=tab[2].data.field(6)[0]+tab[2].data.field(7)[0] #one of these entries is 0 always
         sn2s.append(sn2)
         errormag=1/sn2
         errormags.append(errormag)
@@ -155,7 +155,7 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
         del tab[0].data #free up memoery
 
         tab.close()
-        
+        print i
     return wls, fluxes, sn2s, sigmas, badpoints, zm
 
 
@@ -163,7 +163,7 @@ def getdata(a,b,plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a)
 # lines=[line.....]
 # line = ["name", peakloc, cont region]. line[2][0:3] has cont region. line[1] is peakloc.
 def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,fiber): #the a and b should be same as the getdata(a,b)
-    #f=open("datanewdr8bb", "rb")
+    #f=open("datanewdr9", "rb")
     #data=pickle.load(f)
     #f.close()
     data = [[],[],[],[],[],[],[]]
@@ -247,8 +247,6 @@ if __name__=="__main__":
     #f=open("datanewdr8","rb")
     #data=pickle.load(f)
     #f.close()
-    
-    
     #Below section is for offline collection of plate/mjd/fiber values for calc()
     '''
     plate=[]
