@@ -60,7 +60,7 @@ class datas:
         conterr=sortconterrs
         flux=sortfluxs
         fluxerr=sortfluxerrs
-        array=[plates,mjds,fibers,hdew,ext,cont,conterr,flux,fluxerr]
+        array=[plates,mjds,fibers,hdew,ext,cont,conterr,flux,fluxerr,gi]
         return array
 
     def compiledsort(self,r,array):
@@ -84,6 +84,9 @@ class datas:
             sortconterrs2=zeros(754,float)
             sortfluxs2=zeros(754,float)
             sortfluxerrs2=zeros(754,float)
+        
+            sortgi2=zeros(754,float)
+            
             for k in range(754):
                 sortmjd2[k]=int(zone[1][ind2[k]])
                 sortplate2[k]=int(zone[0][ind2[k]])
@@ -94,8 +97,8 @@ class datas:
                 sortconterrs2[k]=zone[6][ind2[k]]
                 sortfluxs2[k]=zone[7][ind2[k]]
                 sortfluxerrs2[k]=zone[8][ind2[k]]
-                
-            array2=[sortplate2,sortmjd2,sortfiber2,sortext2,sorthdew2,sortconts2,sortconterrs2,sortfluxs2,sortfluxerrs2]
+                sortgi2[k]=zone[9][ind2[k]]
+            array2=[sortplate2,sortmjd2,sortfiber2,sortext2,sorthdew2,sortconts2,sortconterrs2,sortfluxs2,sortfluxerrs2,sortgi2]
             alldata[i]=array2 #alldata collates each sorted quantile.
         return alldata
     def getdata(self,plate,mjd,fiber):
@@ -204,28 +207,33 @@ for k in range(9): #within alldata
         indstart=37+l*75
         zone2=[]#this will contain the relevant data for each Extinction quantile \
                  #to be later summoned for making averages of the 75 spectra
-        for m in range(5): #i.e. only appends plate/fiber/mjd/ext/HDEW
+        for m in range(10):#append all #n=5 only appends plate/fiber/mjd/ext/HDEW
             zone2.append(alldata[k][m][indstart:indstart+75])
         intermediate.append(zone2)
     superset.append(intermediate)
-
+plt.scatter(superset[0][0][9], superset[0][0][3])
+plt.xlabel("Mag g-i")
+plt.ylabel("extinction_g")
+plt.title("First quantile of extinction within first quantile of H-d EW")
+plt.show()
 
 import triangle
+'''
 for j in range(9):
-    '''if j in range(0,3):
+    if j in range(0,3):
         ax=plt.subplot(j+911)
     elif j in range(3,6):
         ax=plt.subplot(j+921)
     else:
         ax=plt.subplot(j+931)
-    '''
+    
 
     data=[0]*len(superset[0][0][0])
     for i in range(len(superset[0][0][0])):
         data[i]=np.array([superset[0][j][3][i],superset[0][j][4][i]])
     triangle.corner(data, labels=["Extinction", "HD EW"])
     plt.savefig(str(j)+"reduced_triangle.png")
-
+'''
 
 
 
