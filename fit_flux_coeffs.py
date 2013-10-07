@@ -143,6 +143,7 @@ if __name__=="__main__":
         fit_ivar=np.array(fit_ivar)
         store_values=[]
         store_values2=[]
+        store_values3=[]
         sigs=[]
         #Fitting
         for i in [0,-1]: 
@@ -153,6 +154,10 @@ if __name__=="__main__":
                 store_values2.append(x2[0])
                 fit_sig=np.zeros(len(fit_ivar[i]))
 
+                A=np.vstack([fit_bright, fit_hdew, fit_ext]).T
+                b=fit_flux_array[i]
+                a=np.linalg.lstsq(A,b)[0]
+                store_values3.append(a)
                 for k in range(len(fit_ivar[i])):
                         if fit_ivar[i][k]==0:
                                 fit_sig[k]=np.inf
@@ -161,7 +166,7 @@ if __name__=="__main__":
                 sigs.append(fit_sig)
                                 
         sigs=np.array(sigs) 
-
+        '''
         #Save coefficients to file
         h=open("storedvaluesAnotherFit","wb")
         pickle.dump(store_values2,h)
@@ -202,7 +207,7 @@ if __name__=="__main__":
                 plt.title("Measured vs Calculated flux at "+str(titles[r])+"A")
                 plt.show()
                 plt.savefig(str(titles[r])+"residuals")
-                plt.clf()
+                plt.clf()'''
         #Plot coefficients
         '''for i in range(3):
                 plt.figure()
