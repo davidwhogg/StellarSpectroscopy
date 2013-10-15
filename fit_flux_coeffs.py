@@ -68,8 +68,9 @@ def getdata(plate,mjd,fiber):
 def LinearFit(p,xsIn,ysIn,zsIn):#fit both
     return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
 fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux: fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
-
-fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,fit_ivar: fit_ivar*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
+def ExpFit(p, xsIn, ysIn, zsIn):
+        return (p[0]*xsIn+p[1]*ysIn) * np.exp(p[2]*zsIn)
+#fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,fit_ivar: fit_ivar*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
 
 if __name__=="__main__":
                 
@@ -122,8 +123,8 @@ if __name__=="__main__":
             ivars_tran = np.trim_zeros(c*b*(ivars[0]+1))
             ivars_used=ivars_tran-1
             if wls_used[0]< 3900.4 and wls_used[-1]>7998.0:
-                for j in [0, -1]:
-                #for j in range(len(flux_used)):
+                #for j in [0, -1]:
+                for j in range(len(flux_used)):
                         fit_flux[j].append(flux_used[j])
                         fit_ivar[j].append(ivars_used[j])
                 fit_hdew.append(hdew[i])
@@ -146,18 +147,20 @@ if __name__=="__main__":
         store_values3=[]
         sigs=[]
         #Fitting
-        for i in [0,-1]: 
-        #for i in range(len(wls_used)): #=3120
-                x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-                store_values.append(x[0])
-                x2=scipy.optimize.leastsq(fitfunc2, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]),np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+        #for i in [0,-1]: 
+        for i in range(len(wls_used)): #=3120
+                #x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                #store_values.append(x[0])
+                x2=scipy.optimize.leastsq(fitfunc, x0, args=(ExpFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]),np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 store_values2.append(x2[0])
                 fit_sig=np.zeros(len(fit_ivar[i]))
 
-                A=np.vstack([fit_bright, fit_hdew, fit_ext]).T
+                #use Np.LinAlg.LstSq
+                '''A=np.vstack([fit_bright, fit_hdew, fit_ext]).T
                 b=fit_flux_array[i]
                 a=np.linalg.lstsq(A,b)[0]
-                store_values3.append(a)
+                store_values3.append(a)'''
+                
                 for k in range(len(fit_ivar[i])):
                         if fit_ivar[i][k]==0:
                                 fit_sig[k]=np.inf
@@ -166,9 +169,9 @@ if __name__=="__main__":
                 sigs.append(fit_sig)
                                 
         sigs=np.array(sigs) 
-        '''
+        
         #Save coefficients to file
-        h=open("storedvaluesAnotherFit","wb")
+        h=open("storedvalues_exp_dr9","wb")
         pickle.dump(store_values2,h)
         h.close()
         #dd=open("storedvaluescheck","wb")
@@ -179,20 +182,20 @@ if __name__=="__main__":
         hcoeff=[]
         ecoeff=[]
 
-        for i in range(2):
+        for i in range(len(store_values2)):
                 bcoeff.append(store_values2[i][0])
                 hcoeff.append(store_values2[i][1])
-                ecoeff.append(store_values2[i][2])
+                ecoeff.append(store_values23[i][2])
         coeffs=np.array([bcoeff,hcoeff,ecoeff])
         
-        l=open("coeffsAnotherFit","rb")
-        coeffs2=pickle.load(l)
-        
+        #l=open("coeffsAnotherFit","rb")
+        #coeffs2=pickle.load(l)
+        #
         #pickle.dump(coeffs,l)
-        l.close()
+        #l.close()
 
         
-        
+        '''
         #Plot residuals
         titles=[3900,8000]
         inds=[0,-1]
@@ -209,7 +212,7 @@ if __name__=="__main__":
                 plt.savefig(str(titles[r])+"residuals")
                 plt.clf()'''
         #Plot coefficients
-        '''for i in range(3):
+        for i in range(3):
                 plt.figure()
                 if i ==0:
                         plt.title("Coefficient of brightness")
@@ -220,7 +223,7 @@ if __name__=="__main__":
                 plt.xlabel("Wavelengths, A")
                 plt.ylabel("Coefficient")
                 plt.plot(wls_used,coeffs[i])
-                plt.savefig("coeffs"+str(i))
+                plt.savefig("coeffsdr9exp"+str(i))
                 plt.clf()
                 
                 '''
@@ -232,4 +235,4 @@ if __name__=="__main__":
 
         #plt.xlabel(str(round(x2[0][0],3))+"*Brightness+"+str(round(x2[0][1],3))+"*H-D EW+"+str(round(x2[0][2],2))+"*Extinction")
         #plt.ylabel("Flux at 8000A")
-        #plt.show()
+        #plt.show()'''
