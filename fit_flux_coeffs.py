@@ -151,7 +151,7 @@ if __name__=="__main__":
         for i in range(len(wls_used)): #=3120
                 #x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 #store_values.append(x[0])
-                x2=scipy.optimize.leastsq(fitfunc, x0, args=(ExpFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]),np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                x2=scipy.optimize.leastsq(fitfunc, x0, args=(ExpFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 store_values2.append(x2[0])
                 fit_sig=np.zeros(len(fit_ivar[i]))
 
@@ -167,7 +167,7 @@ if __name__=="__main__":
                         else:
                                 fit_sig[k]=1.0/fit_ivar[i][k]
                 sigs.append(fit_sig)
-                                
+
         sigs=np.array(sigs) 
         
         #Save coefficients to file
@@ -185,7 +185,7 @@ if __name__=="__main__":
         for i in range(len(store_values2)):
                 bcoeff.append(store_values2[i][0])
                 hcoeff.append(store_values2[i][1])
-                ecoeff.append(store_values23[i][2])
+                ecoeff.append(store_values2[i][2])
         coeffs=np.array([bcoeff,hcoeff,ecoeff])
         
         #l=open("coeffsAnotherFit","rb")
