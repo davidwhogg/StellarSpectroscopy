@@ -67,7 +67,7 @@ def getdata(plate,mjd,fiber):
 
 def LinearFit(p,xsIn,ysIn,zsIn):#fit both
     return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
-fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux: fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
+fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux: np.sqrt(fit_ivar)*fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
 def ExpFit(p, xsIn, ysIn, zsIn):
         return (p[0]*xsIn+p[1]*ysIn) * np.exp(p[2]*zsIn)
 #fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,fit_ivar: fit_ivar*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
