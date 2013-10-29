@@ -67,7 +67,7 @@ def getdata(plate,mjd,fiber):
 
 def LinearFit(p,xsIn,ysIn,zsIn):#fit both
     return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
-fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux: np.sqrt(fit_ivar)*fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
+fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux, fit_ivar: np.sqrt(fit_ivar)*fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
 def ExpFit(p, xsIn, ysIn, zsIn):
         return (p[0]*xsIn+p[1]*ysIn) * np.exp(p[2]*zsIn)
 #fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,fit_ivar: fit_ivar*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
@@ -151,7 +151,7 @@ if __name__=="__main__":
         for i in range(len(wls_used)): #=3120
                 #x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 #store_values.append(x[0])
-                x2=scipy.optimize.leastsq(fitfunc, x0, args=(ExpFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                x2=scipy.optimize.leastsq(fitfunc, x0, args=(ExpFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]), np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 store_values2.append(x2[0])
                 fit_sig=np.zeros(len(fit_ivar[i]))
 
@@ -171,7 +171,7 @@ if __name__=="__main__":
         sigs=np.array(sigs) 
         
         #Save coefficients to file
-        h=open("storedvalues_exp_dr9","wb")
+        h=open("storedvalues_exp_dr9_errs","wb")
         pickle.dump(store_values2,h)
         h.close()
         #dd=open("storedvaluescheck","wb")
@@ -223,7 +223,7 @@ if __name__=="__main__":
                 plt.xlabel("Wavelengths, A")
                 plt.ylabel("Coefficient")
                 plt.plot(wls_used,coeffs[i])
-                plt.savefig("coeffsdr9exp"+str(i))
+                plt.savefig("coeffsdr9experr"+str(i))
                 plt.clf()
                 
                 '''
