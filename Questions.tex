@@ -26,7 +26,7 @@ T = $ \frac{2.9*10^7}{\lambda_{peak}} $. Furthermore, in general, denser stars h
 
 \section{SDSS Data query}
 \subsection{ Using the sqlcl.py module within Python to query the SDSS database (DR9)}
-- This seeks for the standard (calibration) stars as defined on SDSS's "Algorithms" webpage: \url{http://www.sdss3.org/dr9/algorithms/boss_std_ts.php}. \\
+- This seeks the standard (calibration) stars as defined on SDSS's "Algorithms" webpage: \url{http://www.sdss3.org/dr9/algorithms/boss_std_ts.php}. \\
 - There is one modification: instead of \\ $\sqrt{((u-g)-0.82)^2+((g-r)-0.3)^2+((r-i)-0.09)^2+((i-z)-0.02)^2}<0.08$ we used $|(u-g)-0.82|<0.08$, $|(g-r)-0.3|<0.08$ etc. \\
 - The output gives the extinction (in the g-band), the recorded flux, equivalent width and continuum values given in galSpecLine for the H-$\alpha$, H-$\beta$, H-$\gamma$, H-$\delta$ lines. \\
 - However, due to the reported equivalent widths being unreasonable compared to manual estimations, the query also extracts the plate-mjd-fiber values and downloads, via wget, the relevant FITS file for this plate-mjd-fiber combination. \\
@@ -59,7 +59,7 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
     ORDER BY extinction_g DESC"\\
 \end{verbatim}
 \section{Redshift correction}
-- The wavelengths were corrected for redshift using the value recorrded from HDU2 (copy of SpecObj table from SDSS)\\
+- The wavelengths were corrected for redshift using the value recorded from HDU2 (copy of SpecObj table from SDSS)\\
 \begin{figure}
 \includegraphics[width=8cm]{../splines_correct}\\
 \caption{Red line shows redshift correction; blue shows the reversed correction.}
