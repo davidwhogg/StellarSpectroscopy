@@ -14,7 +14,8 @@ os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
 sys.path.append(directory)
 
-def deredshift(wls, fluxes, zm, badpoints):
+
+def deredshiftone(wls, fluxes, zm, badpoints):
         lamcorb=wls[0]/(1.0-zm)
         s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
         xs=wls[0]
@@ -22,7 +23,9 @@ def deredshift(wls, fluxes, zm, badpoints):
         bady=s(badpoints)
         badx=badpoints
         return xs, ys, badx, bady
-def getdata(plate,mjd,fiber):
+
+
+def getdataone(plate,mjd,fiber):
         
         tabs=[0] #we only get one entry each time, we overwrite each time
         fluxes=[0]
@@ -30,7 +33,7 @@ def getdata(plate,mjd,fiber):
         errormags=[0]
         wls=[0]
         ivars=[0]
-        tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plate).zfill(4)+'-'+str(mjd)+'-'+str(fiber).zfill(4)+'.fits')
+        tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(int(plate)).zfill(4)+'-'+str(int(mjd))+'-'+str(int(fiber)).zfill(4)+'.fits')
         #print "tab success", i
         tabs[0]=tab
         j=0 #-2700 ###########
@@ -65,26 +68,32 @@ def getdata(plate,mjd,fiber):
         tab.close()
         return wls, fluxes, sn2s, ivars, badpoints, zm
 
-def LinearFit(p,xsIn,ysIn,zsIn):#fit both
-    return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
-fitfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux, fit_ivar: np.sqrt(fit_ivar)*fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
-def ExpFit(p, xsIn, ysIn, zsIn):
-        return (p[0]*xsIn+p[1]*ysIn) * np.exp(p[2]*zsIn)
-#fitfunc2=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux,fit_ivar: fit_ivar*(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)**2
+# LinearModel no longer used in favor of ExpModel
+#def LinearModel(p,xsIn,ysIn,zsIn):#fit both
+#    return p[0]*xsIn+p[1]*ysIn + p[2]*zsIn
+
+
+objfunc=lambda p,f,fit_bright,fit_hdew,fit_ext,fit_flux, fit_ivar: np.sqrt(fit_ivar)*fabs(f(p,fit_bright,fit_hdew,fit_ext)-fit_flux)
+
+def ExpModel(p, xsIn, ysIn, zsIn):
+        return (p[0]*xsIn+p[1]*ysIn) * np.exp(-p[2]*zsIn)
 
 if __name__=="__main__":
-                
-        f=open("sorted2","rb")
-        array1=pickle.load(f)
+
+        #sorted2 is the output of the SDSS query, sorted into lists
+        f=open("sorted3","rb")
+        array1=np.array(pickle.load(f))
         f.close()
+
+        #datanewdr9 is the output file of eqw_newer with calculated EWs 
         f=open("datanewdr9","rb")
-        data=pickle.load(f)
+        data=np.array(pickle.load(f))
         f.close()
         
-        #Get values from pickled document
+        #Get values from pickle files
         ext=np.array(array1[1])
         magg=np.array(array1[15])
-        bright= 10**(-0.4*(magg-22.5))
+        bright= 10**(-0.4*(magg-22.5-ext))
 
         plates=np.array(array1[9])
         mjds=np.array(array1[11])
@@ -92,13 +101,22 @@ if __name__=="__main__":
         print len(plates)
 
         hdew=[]
-
-        #verify that data are ordered correctly
+        
         ext2=[]
+        #dataline=data[0].ravel()
+        #datasort=np.reshape(dataline,(10,-1),order='F')
+        
+        ##
         for i in range(len(magg)):
             ext2.append(data[0][i][5])
             hdew.append(data[0][i][4])
             
+        #ext2[0:10]
+        #datasort[5][0:10]
+        #hdew[0:10]
+        #datasort[4][0:10]
+        
+        #verify that data are ordered correctly
         if ext2[0]!=ext[0]:
             print "Error! Data arrays do not align!"
             sys.exit()
@@ -114,8 +132,8 @@ if __name__=="__main__":
             plate=plates[i]
             mjd=mjds[i]
             fiber=fibers[i]
-            wls, fluxes, sn2s, ivars, badpoints, zm = getdata(plate,mjd,fiber)
-            xs, ys, badx, bady = deredshift(wls, fluxes, zm, badpoints)
+            wls, fluxes, sn2s, ivars, badpoints, zm = getdataone(plate,mjd,fiber)
+            xs, ys, badx, bady = deredshiftone(wls, fluxes, zm, badpoints)
             b=(wls[0]>3900)
             c=(wls[0]<8000)
             wls_used = np.trim_zeros(c*b*wls[0])
@@ -140,7 +158,8 @@ if __name__=="__main__":
         fit_flux_array = np.array(fit_flux)
         fit_hdew=np.array(fit_hdew)
         fit_ext=np.array(fit_ext)
-        fit_bright=np.array(fit_bright)
+        ##############Fitbright updated
+        fit_bright=np.array(fit_bright) #########recentered
         fit_ivar=np.array(fit_ivar)
         store_values=[]
         store_values2=[]
@@ -149,9 +168,9 @@ if __name__=="__main__":
         #Fitting
         #for i in [0,-1]: 
         for i in range(len(wls_used)): #=3120
-                #x=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                #x=scipy.optimize.leastsq(objfunc, x0, args=(LinearModel,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 #store_values.append(x[0])
-                x2=scipy.optimize.leastsq(fitfunc, x0, args=(ExpFit,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]), np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+                x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]), np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 store_values2.append(x2[0])
                 fit_sig=np.zeros(len(fit_ivar[i]))
 
@@ -171,7 +190,7 @@ if __name__=="__main__":
         sigs=np.array(sigs) 
         
         #Save coefficients to file
-        h=open("storedvalues_exp_dr9_errs","wb")
+        h=open("storedvalues_exp_dr9_errs_rebright","wb")
         pickle.dump(store_values2,h)
         h.close()
         #dd=open("storedvaluescheck","wb")
@@ -195,27 +214,29 @@ if __name__=="__main__":
         #l.close()
 
         
-        '''
+        
         #Plot residuals
-        titles=[3900,8000]
-        inds=[0,-1]
-        for r in range(2):
+        
+        inds=[110,622,1493,2218]
+        for r in range(4):
                 a=inds[r]
                 plt.figure()
-                #plt.scatter(fit_ext*ecoeff[a]+fit_bright*bcoeff[a]+fit_hdew*hcoeff[a],fit_flux[a],s=10,linewidths=0 )
-                plt.errorbar(fit_ext*coeffs2[2][a]+fit_bright*coeffs2[0][a]+fit_hdew*coeffs2[1][a],fit_flux[a], sigs[a], xerr=None, ls='none')
+                plt.errorbar(fit_flux[a],(fit_ext*store_values2[a][2]+fit_bright*store_values2[a][0]+fit_hdew*store_values2[a][1]),sigs[a], xerr=None, ls='none',alpha=0.3)
+                plt.scatter(fit_flux[a],fit_ext*store_values2[a][2]+fit_bright*store_values2[a][0]+fit_hdew*store_values2[a][1],c='k',s=10,linewidths=0 )
+                #plt.axhline(y=1)
                 plt.plot([0,max(fit_flux[a])],[0,max(fit_flux[a])],'k')
-                plt.xlabel(str(round(coeffs2[0][a],3))+"*Brightness+"+str(round(coeffs2[1][a],3))+"*H-D EW+"+str(round(coeffs2[2][a],2))+"*Extinction")
-                plt.ylabel("Measured Flux")
-                plt.title("Measured vs Calculated flux at "+str(titles[r])+"A")
-                plt.show()
-                plt.savefig(str(titles[r])+"residuals")
-                plt.clf()'''
-        #Plot coefficients
+                plt.ylabel("Predicted flux")
+                #plt.ylabel(str(round(store_values2[a][0],3))+"*Brightness+"+str(round(store_values2[a][1],3))+"*H-D EW+"+str(round(store_values2[a][2],2))+"*Extinction")
+                plt.xlabel("Measured Flux")
+                plt.title("Measured vs Calculated flux at "+str(wls_used[a])+"A")
+                
+                plt.savefig(str(wls_used[a])+"residuals_exp.png")
+                plt.clf()
+        '''#Plot coefficients
         for i in range(3):
                 plt.figure()
                 if i ==0:
-                        plt.title("Coefficient of brightness")
+                        plt.title("Coefficient of brightness recentered")
                 elif i==1:
                         plt.title("Coefficient of H-D EW")
                 else:
@@ -223,11 +244,10 @@ if __name__=="__main__":
                 plt.xlabel("Wavelengths, A")
                 plt.ylabel("Coefficient")
                 plt.plot(wls_used,coeffs[i])
-                plt.savefig("coeffsdr9experr"+str(i))
-                plt.clf()
+                plt.savefig("coeffsdr9experr_newbright"+str(i))
+                plt.clf()'''
                 
-                '''
-        #x2=scipy.optimize.leastsq(fitfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+        '''#x2=scipy.optimize.leastsq(objfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         #plt.scatter(fit_ext*x2[0][2]+fit_bright*x2[0][0]+fit_hdew*x2[0][1],fit_flux_8000,s=10,linewidths=0 )
         #plt.plot([0,max(fit_flux_8000)],[0,max(fit_flux_8000)],'k')
         #plt.plot([min(aa),max(aa)],[min(aa)*x[0][2],max(aa)*x[0][2]],color='k')
