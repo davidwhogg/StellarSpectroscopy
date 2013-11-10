@@ -37,8 +37,8 @@ def sort_data():
     #and p.extinction_g between "+str(exta)+" AND "+str(extb)+ ##
     query = "SELECT p.objID, \
     p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, p.extinction_g, \
-    p.obj, s.plate, s.fiberID, s.mjd, p.extinction_g, p.extinction_g, p.extinction_g, \
-    p.type, p.extinction_g, p.extinction_g, p.extinction_g \
+    p.obj, s.plate, s.fiberID, s.mjd, p.extinction_g, p.extinction_g,  p.psfMag_u, \
+    p.psfMag_g, p.psfMag_r, p.psfMag_i, p.psfMag_z \
     FROM PhotoObj AS p \
     JOIN SpecObj as s ON s.specobjID=p.specobjID \
     WHERE psfMag_r BETWEEN 15.0 and 19.0 \
@@ -77,6 +77,11 @@ def sort_data():
             plate[i]=int(plate[i])
             mjd[i]=int(mjd[i])
             fiber[i]=int(fiber[i])
+
+    #below section will generate sorted2 pickle file for fit_flux_coeffs.py
+    f=open("sorted3","wb")
+    pickle.dump(array1,f)
+    f.close()
 
     return plate, mjd, fiber, extinction, objid
     
@@ -224,7 +229,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,
                 eqw = flux/cont1
 
 
-                data[w].append([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], len(fail_flag)]) #grouped_data
+                data[w].append(np.array([cont1, cont_err, flux, flux_err, eqw, extinction[zz], plate[zz], mjd[zz], fiber[zz], len(fail_flag)])) #grouped_data
         print "ok done", z
     
     return data 
@@ -247,31 +252,12 @@ if __name__=="__main__":
     #f=open("datanewdr8","rb")
     #data=pickle.load(f)
     #f.close()
-    #Below section is for offline collection of plate/mjd/fiber values for calc()
-    '''
-    plate=[]
-    mjd=[]
-    fiber=[]
-    extinction=[]
-    objid=[]
-    for i in range(10):
-        plate.append(data[0][i][6])
-        mjd.append(data[0][i][7])
-        fiber.append(data[0][i][8])
-        extinction.append(data[0][i][5])
-        objid.append(data[0][i][9])'''
+    
         
     plate, mjd, fiber, extinction, objid = sort_data()
 
     #below section irrelevant for dr9
-    '''f=open("sorted","rb")
-    array1=pickle.load(f)
-    f.close()
-    plate=array1[9]
-    mjd=array1[11]
-    fiber=array1[10]
-    extinction=array1[1]
-    objid=array1[0]'''
+   
     lines=[\
         ["H-delta",4102,[4002,4082,4122,4202]],\
         ["H-gamma",4340,[4240,4320,4360,4440]],\
