@@ -189,7 +189,7 @@ def calc(a,b,lines, wls, fluxes, sigmas, badpoints, extinction, objid,plate,mjd,
 
             #skip peaks if there are no wavelength-flux data for that peak
             if sum(flux_indx)==0 or sum(cont_indx)==0:
-                data[w].append([0,0,0,0,0,extinction[zz],plate[zz],mjd[zz],fiber[zz],str(int(objid[zz])),0])
+                data[w].append([0,0,0,0,0,extinction[zz],plate[zz],mjd[zz],fiber[zz],0])
                 print "skipped ", z, w
 
             else:
