@@ -100,21 +100,10 @@ if __name__=="__main__":
         fibers=np.array(array1[10])
         print len(plates)
 
-        hdew=[]
-        
-        ext2=[]
-        #dataline=data[0].ravel()
-        #datasort=np.reshape(dataline,(10,-1),order='F')
-        
-        ##
-        for i in range(len(magg)):
-            ext2.append(data[0][i][5])
-            hdew.append(data[0][i][4])
-            
-        #ext2[0:10]
-        #datasort[5][0:10]
-        #hdew[0:10]
-        #datasort[4][0:10]
+        dataline=data[0].ravel()
+        datasort=np.reshape(dataline,(10,-1),order='F')
+        ext=datasort[5]
+        hdew=datasort[4]
         
         #verify that data are ordered correctly
         if ext2[0]!=ext[0]:
