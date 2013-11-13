@@ -58,10 +58,7 @@ def getdataone(plate,mjd,fiber):
         errormags[0]=errormag
         badpoints=[]
         for v in range(len(ivars[0])):
-                if ivars[0][v]!=0:
-                    #ivars[0][v]=1/sqrt(ivars[0][v]) convert to Sigma
-                        pass
-                elif ivars[0][v]==0:
+                if ivars[0][v]==0:
                     #ivars[0][v]=np.inf
                     badpoints.append(wls[0][v])
         del tab[0].data #free up memoery
@@ -102,13 +99,13 @@ if __name__=="__main__":
 
         dataline=data[0].ravel()
         datasort=np.reshape(dataline,(10,-1),order='F')
-        ext=datasort[5]
+        
+        ext2=datasort[5]
         hdew=datasort[4]
+        # datasort[6], [7], [8] are plate/mjd/fiber, if needed for assert
         
         #verify that data are ordered correctly
-        if ext2[0]!=ext[0]:
-            print "Error! Data arrays do not align!"
-            sys.exit()
+        assert ext2.all()!=ext.all()
 
 
         #Standardize flux array length
