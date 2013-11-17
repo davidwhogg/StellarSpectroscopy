@@ -88,9 +88,9 @@ if __name__=="__main__":
         f.close()
         
         #Get values from pickle files
-        ext=np.array(array1[1])
+        extg=np.array(array1[1])
         magg=np.array(array1[15])
-        bright= 10**(-0.4*(magg-22.5-ext))
+        bright= 10**(-0.4*(magg-22.5-extg))
 
         plates=np.array(array1[9])
         mjds=np.array(array1[11])
@@ -105,15 +105,15 @@ if __name__=="__main__":
         # datasort[6], [7], [8] are plate/mjd/fiber, if needed for assert
         
         #verify that data are ordered correctly
-        assert ext2.all()!=ext.all()
+        assert ext2.all()==extg.all()
 
 
         #Standardize flux array length
-        fit_flux= [[] for x in xrange(3120)]
+        fit_flux= [[] for x in xrange(3716)]
         fit_hdew=[]
         fit_ext=[]
         fit_bright=[]
-        fit_ivar=[[] for x in xrange(3120)]
+        fit_ivar=[[] for x in xrange(3716)]
         for i in range(len(plates)):
             plate=plates[i]
             mjd=mjds[i]
@@ -121,24 +121,24 @@ if __name__=="__main__":
             wls, fluxes, sn2s, ivars, badpoints, zm = getdataone(plate,mjd,fiber)
             xs, ys, badx, bady = deredshiftone(wls, fluxes, zm, badpoints)
             b=(wls[0]>3900)
-            c=(wls[0]<8000)
+            c=(wls[0]<9175)
             wls_used = np.trim_zeros(c*b*wls[0])
             flux_used = np.trim_zeros(c*b*ys)
             ivars_tran = np.trim_zeros(c*b*(ivars[0]+1))
             ivars_used=ivars_tran-1
-            if wls_used[0]< 3900.4 and wls_used[-1]>7998.0:
+            if wls_used[0]< 3900.4 and wls_used[-1]>9173.0:
                 #for j in [0, -1]:
                 for j in range(len(flux_used)):
                         fit_flux[j].append(flux_used[j])
                         fit_ivar[j].append(ivars_used[j])
                 fit_hdew.append(hdew[i])
-                fit_ext.append(ext[i])
+                fit_ext.append(extg[i])
                 fit_bright.append(bright[i])
             else:
                 print "missing flux values", wls_used[0], wls_used[-1]
                 pass
 
-        
+        sys.exit()
         x0i=[0.1,0.1,0.1] #initial guess
         x0=array(x0i) #optimize requires array
         fit_flux_array = np.array(fit_flux)
@@ -153,7 +153,7 @@ if __name__=="__main__":
         sigs=[]
         #Fitting
         #for i in [0,-1]: 
-        for i in range(len(wls_used)): #=3120
+        for i in range(len(wls_used)): #=3716
                 #x=scipy.optimize.leastsq(objfunc, x0, args=(LinearModel,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
                 #store_values.append(x[0])
                 x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i]), np.array(fit_ivar[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
@@ -176,7 +176,7 @@ if __name__=="__main__":
         sigs=np.array(sigs) 
         
         #Save coefficients to file
-        h=open("storedvalues_exp_dr9_errs_rebright","wb")
+        h=open("storedvalues_exp_dr9_errs_rebright_expand","wb")
         pickle.dump(store_values2,h)
         h.close()
         #dd=open("storedvaluescheck","wb")
@@ -202,7 +202,7 @@ if __name__=="__main__":
         
         
         #Plot residuals
-        
+        '''
         inds=[110,622,1493,2218]
         for r in range(4):
                 a=inds[r]
@@ -217,8 +217,8 @@ if __name__=="__main__":
                 plt.title("Measured vs Calculated flux at "+str(wls_used[a])+"A")
                 
                 plt.savefig(str(wls_used[a])+"residuals_exp.png")
-                plt.clf()
-        '''#Plot coefficients
+                plt.clf()'''
+        #Plot coefficients
         for i in range(3):
                 plt.figure()
                 if i ==0:
@@ -230,8 +230,18 @@ if __name__=="__main__":
                 plt.xlabel("Wavelengths, A")
                 plt.ylabel("Coefficient")
                 plt.plot(wls_used,coeffs[i])
-                plt.savefig("coeffsdr9experr_newbright"+str(i))
-                plt.clf()'''
+                dibs=np.array([4430,5449,6284,5780,5778,4727,5382,5535,6177,6005,6590,6613,7224])
+                for k in dibs:
+                        plt.axvline(x=k, c='b', lw=0.3)
+                
+                
+                plt.axvline(x=6563, c='gray', lw=0.3)
+                plt.axvline(x=4861, c='gray', lw=0.3)
+                plt.axvline(x=4341, c='gray', lw=0.3)
+                plt.axvline(x=4102, c='gray', lw=0.3)
+                
+                plt.savefig("coeffsdr9experr_newbright_lines_expand"+str(i))
+                plt.clf()
                 
         '''#x2=scipy.optimize.leastsq(objfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         #plt.scatter(fit_ext*x2[0][2]+fit_bright*x2[0][0]+fit_hdew*x2[0][1],fit_flux_8000,s=10,linewidths=0 )
