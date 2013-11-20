@@ -138,7 +138,6 @@ if __name__=="__main__":
                 print "missing flux values", wls_used[0], wls_used[-1]
                 pass
 
-        sys.exit()
         x0i=[0.1,0.1,0.1] #initial guess
         x0=array(x0i) #optimize requires array
         fit_flux_array = np.array(fit_flux)
