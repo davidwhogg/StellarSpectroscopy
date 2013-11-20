@@ -164,34 +164,13 @@ if __name__=="__main__":
     ivar_unravel=ivar_array.ravel()
     ivar_sort= np.reshape(ivar_unravel,(len(wls_ideal),-1),'F')
     
-    store_values=[]
-    store_values2=[]
-    store_values3=[]
-    sigs=[]
-
+    store_values2=np.zeros((len(wls_ideal),3))
     
     #Fitting
-    for i in range(len(wls_used)): #=3716
-        #x=scipy.optimize.leastsq(objfunc, x0, args=(LinearModel,fit_bright,fit_hdew,fit_ext, np.array(fit_flux[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-        #store_values.append(x[0])
+    for i in range(len(wls_ideal)): #=3716
         x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(flux_sort[i]), np.array(ivar_sort[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-        store_values2.append(x2[0])
-        fit_sig=np.zeros(len(fit_ivar[i]))
-
-        #use Np.LinAlg.LstSq
-        '''A=np.vstack([fit_bright, fit_hdew, fit_ext]).T
-        b=fit_flux_array[i]
-        a=np.linalg.lstsq(A,b)[0]
-        store_values3.append(a)'''
-            
-        for k in range(len(fit_ivar[i])):
-            if fit_ivar[i][k]==0:
-                fit_sig[k]=np.inf
-            else:
-                fit_sig[k]=1.0/fit_ivar[i][k]
-        sigs.append(fit_sig)
-
-    sigs=np.array(sigs) 
+        store_values2[i]=x2[0]
+        
 
     #Save coefficients to file
     h=open("storedvalues_exp_dr9_errs_rebright_expand_restack","wb")
@@ -200,16 +179,10 @@ if __name__=="__main__":
     #dd=open("storedvaluescheck","wb")
     #pickle.dump(store_values,dd)
 
-    #Group and save fitted coefficient to file
-    bcoeff=[]
-    hcoeff=[]
-    ecoeff=[]
-
-    for i in range(len(store_values2)):
-        bcoeff.append(store_values2[i][0])
-        hcoeff.append(store_values2[i][1])
-        ecoeff.append(store_values2[i][2])
-    coeffs=np.array([bcoeff,hcoeff,ecoeff])
+    #group coefficients by type
+    coeffs_unravel=store_values2.ravel()
+    coeffs=np.reshape(coeffs_unravel,(3,-1),'F')
+    
     
     #l=open("coeffsAnotherFit","rb")
     #coeffs2=pickle.load(l)
@@ -247,7 +220,7 @@ if __name__=="__main__":
             plt.title("Coefficient of Extinction")
         plt.xlabel("Wavelengths, A")
         plt.ylabel("Coefficient")
-        plt.plot(wls_used,coeffs[i])
+        plt.plot(wls_ideal,coeffs[i])
         dibs=np.array([4430,5449,6284,5780,5778,4727,5382,5535,6177,6005,6590,6613,7224])
         for k in dibs:
             plt.axvline(x=k, c='b', lw=0.3)
