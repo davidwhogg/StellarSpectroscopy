@@ -10,11 +10,15 @@ import commands
 import pickle
 import pyfits
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
 sys.path.append(directory)
 
 
+def setplotsize(a,b):
+        rcParams['figure.figsize'] = a,b
+        
 def deredshiftone(wls, fluxes, zm, badpoints):
         lamcorb=wls[0]/(1.0-zm)
         s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
@@ -165,13 +169,19 @@ if __name__=="__main__":
     ivar_sort= np.reshape(ivar_unravel,(len(wls_ideal),-1),'F')
     
     store_values2=np.zeros((len(wls_ideal),3))
+    b_errors=np.zeros(len(wls_ideal))
+    hdew_errors=np.zeros(len(wls_ideal))
+    ext_errors=np.zeros(len(wls_ideal))
     
     #Fitting
     for i in range(len(wls_ideal)): #=3716
         x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(flux_sort[i]), np.array(ivar_sort[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         store_values2[i]=x2[0]
-        
+        b_errors[i]=sqrt(x2[1][0][0])
+        hdew_errors[i]=sqrt(x2[1][1][1])
+        ext_errors[i]=sqrt(x2[1][2][2])
 
+    errors=np.array([b_errors,hdew_errors,ext_errors])
     #Save coefficients to file
     h=open("storedvalues_exp_dr9_errs_rebright_expand_restack","wb")
     pickle.dump(store_values2,h)
@@ -184,9 +194,6 @@ if __name__=="__main__":
     coeffs=np.reshape(coeffs_unravel,(3,-1),'F')
     
     
-    #l=open("coeffsAnotherFit","rb")
-    #coeffs2=pickle.load(l)
-    #
     #pickle.dump(coeffs,l)
     #l.close()
 
@@ -230,9 +237,71 @@ if __name__=="__main__":
         plt.axvline(x=4861, c='gray', lw=0.3)
         plt.axvline(x=4341, c='gray', lw=0.3)
         plt.axvline(x=4102, c='gray', lw=0.3)
-        
-        plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
+        plt.plot(wls_ideal,errors[i],'k')
+        setplotsize(10,5)
+        plt.savefig("test"+str(i))
+        #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
         plt.clf()
+
+    #l=open("coeffsAnotherFit","rb")
+    #coeffs2=pickle.load(l)
+    #
+    #pickle.dump(coeffs,l)
+    #l.close()
+
+    
+    
+    #Plot residuals
+    '''
+    inds=[110,622,1493,2218]
+    for r in range(4):
+        a=inds[r]
+        plt.figure()
+        plt.errorbar(fit_flux[a],(fit_ext*store_values2[a][2]+fit_bright*store_values2[a][0]+fit_hdew*store_values2[a][1]),sigs[a], xerr=None, ls='none',alpha=0.3)
+        plt.scatter(fit_flux[a],fit_ext*store_values2[a][2]+fit_bright*store_values2[a][0]+fit_hdew*store_values2[a][1],c='k',s=10,linewidths=0 )
+        #plt.axhline(y=1)
+        plt.plot([0,max(fit_flux[a])],[0,max(fit_flux[a])],'k')
+        plt.ylabel("Predicted flux")
+        #plt.ylabel(str(round(store_values2[a][0],3))+"*Brightness+"+str(round(store_values2[a][1],3))+"*H-D EW+"+str(round(store_values2[a][2],2))+"*Extinction")
+        plt.xlabel("Measured Flux")
+        plt.title("Measured vs Calculated flux at "+str(wls_used[a])+"A")
+        
+        plt.savefig(str(wls_used[a])+"residuals_exp.png")
+        plt.clf()'''
+    #Plot coefficients
+    for i in range(2,3):
+        fig=plt.figure()
+        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
+        ax1 = plt.subplot(gs[0])
+        ax2 = plt.subplot(gs[1])
+        if i ==0:
+            ax1.set_title("Coefficient of brightness recentered")
+        elif i==1:
+            ax1.set_title("Coefficient of H-D EW")
+        else:
+            ax1.set_title("Coefficient of Extinction")
+        ax1.plot(wls_ideal,coeffs[i])
+        ax1.set_ylabel("Coefficient")
+        ax2.set_ylabel("Error")
+        ax2.plot(wls_ideal,errors[i])
+        ax2.set_xlabel("Wavelengths, A")
+        #plt.plot(wls_ideal,coeffs[i])
+        dibs=np.array([4430,5449,6284,5780,5778,4727,5382,5535,6177,6005,6590,6613,7224])
+        for k in dibs:
+            ax1.axvline(x=k, c='b', lw=0.3)
+        ax1.grid(b=True)
+        ax2.grid(b=True)
+        ax1.axvline(x=6563, c='gray', lw=0.3)
+        ax1.axvline(x=4861, c='gray', lw=0.3)
+        ax1.axvline(x=4341, c='gray', lw=0.3)
+        ax1.axvline(x=4102, c='gray', lw=0.3)
+        plt.setp(ax1.get_xticklabels(), visible=False)
+        plt.tight_layout()
+        setplotsize(10,2)
+        fig.savefig("test"+str(i))
+        
+        #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
+        fig.clf()
             
         '''#x2=scipy.optimize.leastsq(objfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         #plt.scatter(fit_ext*x2[0][2]+fit_bright*x2[0][0]+fit_hdew*x2[0][1],fit_flux_8000,s=10,linewidths=0 )
