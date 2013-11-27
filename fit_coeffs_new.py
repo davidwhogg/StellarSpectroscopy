@@ -176,6 +176,7 @@ if __name__=="__main__":
     #Fitting
     for i in range(len(wls_ideal)): #=3716
         x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(flux_sort[i]), np.array(ivar_sort[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+        
         store_values2[i]=x2[0]
         b_errors[i]=sqrt(x2[1][0][0])
         hdew_errors[i]=sqrt(x2[1][1][1])
@@ -217,7 +218,7 @@ if __name__=="__main__":
         plt.savefig(str(wls_used[a])+"residuals_exp.png")
         plt.clf()'''
     #Plot coefficients
-    for i in range(3):
+    '''for i in range(3):
         plt.figure()
         if i ==0:
             plt.title("Coefficient of brightness recentered")
@@ -241,13 +242,9 @@ if __name__=="__main__":
         setplotsize(10,5)
         plt.savefig("test"+str(i))
         #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
-        plt.clf()
+        plt.clf()'''
 
-    #l=open("coeffsAnotherFit","rb")
-    #coeffs2=pickle.load(l)
-    #
-    #pickle.dump(coeffs,l)
-    #l.close()
+
 
     
     
@@ -268,7 +265,7 @@ if __name__=="__main__":
         
         plt.savefig(str(wls_used[a])+"residuals_exp.png")
         plt.clf()'''
-    #Plot coefficients
+    #Plot coefficients with error in separate subplot
     for i in range(2,3):
         fig=plt.figure()
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
