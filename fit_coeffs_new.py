@@ -127,7 +127,7 @@ if __name__=="__main__":
     fit_bright=np.zeros(len(plates))
     
     
-    for i in range(len(plates)):
+    for i in range(len(plates/100)):
         plate=plates[i]
         mjd=mjds[i]
         fiber=fibers[i]
@@ -184,7 +184,7 @@ if __name__=="__main__":
 
     errors=np.array([b_errors,hdew_errors,ext_errors])
     #Save coefficients to file
-    h=open("storedvalues_exp_dr9_errs_rebright_expand_restack","wb")
+    h=open("storedvalues_exp_dr9_errs_test","wb")
     pickle.dump(store_values2,h)
     h.close()
     #dd=open("storedvaluescheck","wb")
@@ -295,7 +295,7 @@ if __name__=="__main__":
         plt.setp(ax1.get_xticklabels(), visible=False)
         plt.tight_layout()
         setplotsize(10,2)
-        fig.savefig("test"+str(i))
+        fig.savefig("test2"+str(i))
         
         #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
         fig.clf()
