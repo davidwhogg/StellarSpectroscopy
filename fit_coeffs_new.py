@@ -169,41 +169,55 @@ if __name__=="__main__":
     ivar_unravel=ivar_array.ravel()
     ivar_sort= np.reshape(ivar_unravel,(len(wls_ideal),-1),'F')
     
-    store_values2=np.zeros((len(wls_ideal),3))
+    store_values=np.zeros((len(wls_ideal),3))
     b_errors=np.zeros(len(wls_ideal))
     hdew_errors=np.zeros(len(wls_ideal))
     ext_errors=np.zeros(len(wls_ideal))
+
+    store_values2=np.zeros((len(wls_ideal),3))
+    b_errors2=np.zeros(len(wls_ideal))
+    hdew_errors2=np.zeros(len(wls_ideal))
+    ext_errors2=np.zeros(len(wls_ideal))
+    
     store_popt=np.zeros((len(wls_ideal),3))
-    store_pcov=[]#np.zeros(len(wls_ideal))
     #Fitting
     for i in range(len(wls_ideal)): #=3716
         x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(flux_sort[i]), np.array(ivar_sort[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         popt, pcov =scipy.optimize.curve_fit(ExpModel,(fit_bright,fit_hdew,fit_ext),flux_sort[i],sigma=1/sqrt(ivar_sort[i]))
-        store_popt[i]=popt
-        #store_pcov[i]=pocv
-        store_pcov.append(pcov)
 
-        store_values2[i]=x2[0]
+        store_popt[i]=popt
+        b_errors2[i]=sqrt(pcov[0][0])
+        hdew_errors2[i]=sqrt(pcov[1][1])
+        ext_errors2[i]=sqrt(pcov[2][2])
+
+        store_values[i]=x2[0]
         b_errors[i]=sqrt(x2[1][0][0])
         hdew_errors[i]=sqrt(x2[1][1][1])
         ext_errors[i]=sqrt(x2[1][2][2])
 
     errors=np.array([b_errors,hdew_errors,ext_errors])
-    #Save coefficients to file
-    h=open("storedvalues_exp_dr9_errs_test","wb")
-    pickle.dump(store_values2,h)
+    errors2=np.array([b_errors2,hdew_errors2,ext_errors2])
+    #Save errors to file
+    h=open("fitted_errors_leastsq","wb")
+    pickle.dump(errors,h)
     h.close()
-    #dd=open("storedvaluescheck","wb")
-    #pickle.dump(store_values,dd)
+    h=open("fitted_errors_curvefit","wb")
+    pickle.dump(errors2,h)
+    h.close()
 
     #group coefficients by type
-    coeffs_unravel=store_values2.ravel()
+    coeffs_unravel=store_values.ravel()
     coeffs=np.reshape(coeffs_unravel,(3,-1),'F')
-    
-    
-    #pickle.dump(coeffs,l)
-    #l.close()
 
+    coeffs_unravel2=store_popt.ravel()
+    coeffs2=np.reshape(coeffs_unravel2,(3,-1),'F')
+    
+    h=open("fitted_coefficients_leastsq","wb")
+    pickle.dump(coeffs,h)
+    h.close()
+    h=open("fitted_coefficients_curvefit","wb")
+    pickle.dump(coeffs2,h)
+    h.close()
     
     
     #Plot residuals
@@ -272,7 +286,7 @@ if __name__=="__main__":
         plt.savefig(str(wls_used[a])+"residuals_exp.png")
         plt.clf()'''
     #Plot coefficients with error in separate subplot
-    for i in range(2,3):
+    '''for i in range(2,3):
         fig=plt.figure()
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         ax1 = plt.subplot(gs[0])
@@ -305,8 +319,9 @@ if __name__=="__main__":
         
         #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
         fig.clf()
-            
-        '''#x2=scipy.optimize.leastsq(objfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
+        #residuals below
+
+        #x2=scipy.optimize.leastsq(objfunc, x0, args=(LinearFit,fit_bright,fit_hdew,fit_ext, fit_flux_8000), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         #plt.scatter(fit_ext*x2[0][2]+fit_bright*x2[0][0]+fit_hdew*x2[0][1],fit_flux_8000,s=10,linewidths=0 )
         #plt.plot([0,max(fit_flux_8000)],[0,max(fit_flux_8000)],'k')
         #plt.plot([min(aa),max(aa)],[min(aa)*x[0][2],max(aa)*x[0][2]],color='k')
