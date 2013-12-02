@@ -1,5 +1,6 @@
 import scipy.optimize
 from scipy import optimize
+from scipy.optimize import curve_fit
 from scipy.interpolate import UnivariateSpline
 from pylab import *
 from scipy import stats
@@ -127,7 +128,7 @@ if __name__=="__main__":
     fit_bright=np.zeros(len(plates))
     
     
-    for i in range(len(plates/100)):
+    for i in range(len(plates)):
         plate=plates[i]
         mjd=mjds[i]
         fiber=fibers[i]
@@ -172,11 +173,16 @@ if __name__=="__main__":
     b_errors=np.zeros(len(wls_ideal))
     hdew_errors=np.zeros(len(wls_ideal))
     ext_errors=np.zeros(len(wls_ideal))
-    
+    store_popt=np.zeros((len(wls_ideal),3))
+    store_pcov=[]#np.zeros(len(wls_ideal))
     #Fitting
     for i in range(len(wls_ideal)): #=3716
         x2=scipy.optimize.leastsq(objfunc, x0, args=(ExpModel,fit_bright,fit_hdew,fit_ext, np.array(flux_sort[i]), np.array(ivar_sort[i])), Dfun=None, full_output=1, col_deriv=0, ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-        
+        popt, pcov =scipy.optimize.curve_fit(ExpModel,(fit_bright,fit_hdew,fit_ext),flux_sort[i],sigma=1/sqrt(ivar_sort[i]))
+        store_popt[i]=popt
+        #store_pcov[i]=pocv
+        store_pcov.append(pcov)
+
         store_values2[i]=x2[0]
         b_errors[i]=sqrt(x2[1][0][0])
         hdew_errors[i]=sqrt(x2[1][1][1])
