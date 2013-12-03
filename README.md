@@ -1,16 +1,14 @@
 StellarSpectroscopy
 ===================
 
-Data Compilation
+Data Compilation, fitting for EWs
+* **eqw-newer.py**: this module calculates the continuum, flux and equivalent width for a dictionary of spectral line locations and outputs the data as a pickled file for use in **plotting.py** and **fit_coeffs_new.py** Sample picture: http://postimg.org/image/nniirvr7r/. It also queries SDSS to obtain the FITS files for each spectrum.
 
-* **eqw-newer.py**: this module calculates the continuum, flux and equivalent width for a dictionary of spectral line locations and outputs the data as a pickled file for use in **plotting.py** and **fit_coeffs_new.py** Sample picture: http://postimg.org/image/nniirvr7r/.
-* 
-
-Fitting
-* **analysis.py** has a bunch of functions which allow for the individual inspection of the i-th spectrum. Currently it also plots a 3x3 figure of instances of failures of the above estimation module, e.g. http://postimg.org/image/6o10qb157/.
+Fitting for dust attenuation law
 * **fit_coeffs_new** fits for the coefficients for an attentuation law involving brightness, HD-EW and extinction_g using a standardized wavelength grid, and generates a covariance matrix (currently investigating accuracy of this) and outputs the files for use in **plotting.py**.
 
 Plotting
+* **analysis.py** has a bunch of functions which allow for the individual (visual) inspection of the i-th spectrum. Currently it also plots a 3x3 figure of instances of failures of the above estimation module, e.g. http://postimg.org/image/6o10qb157/.
 * **plotting.py** plots the coefficients obtained from **fit_coeffs_new.py**, with the possibility of labelling various spectral lines. Sample plot: http://postimg.org/image/gmulxqnov/
 * * **histotriangle.py** which will graph histograms of the variables, using the stars from **filterstars.py** as well as a contour plot of two variables. Sample picture: http://postimg.org/image/s3pdr2dhx/
 
