@@ -1,6 +1,12 @@
 StellarSpectroscopy
 ===================
+Authors
+-------
+* David W. Hogg, New York University
+* Jeffrey Mei, New York University Abu Dhabi
 
+Modules
+-------
 Data Compilation, fitting for EWs
 * **eqw-newer.py**: this module calculates the continuum, flux and equivalent width for a dictionary of spectral line locations and outputs the data as a pickled file for use in **plotting.py** and **fit_coeffs_new.py** Sample picture: http://postimg.org/image/nniirvr7r/. It also queries SDSS to obtain the FITS files for each spectrum.
 
