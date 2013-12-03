@@ -1,17 +1,26 @@
 StellarSpectroscopy
 ===================
 
-Quick summary:
--------------
-* **sqlcl.py** should be downloaded if it's not on the computer already. 
-* * Current work is in **eqw_estimate_new.py**: this function estimates the equivalent widths and continuum values of the h-b, h-gamma, h-d peaks for *n* stars with extinction values between *exta* and *extb*. It returns an array with the integrated fluxes, continuum values, equivalent widths and peak locations and saves it to a file for further reading. Sample picture: http://postimg.org/image/nniirvr7r/.
-* * Also **analysis.py** has a bunch of functions which allow for the individual inspection of the i-th spectrum. Currently it also plots a 3x3 figure of instances of failures of the above estimation module, e.g. http://postimg.org/image/6o10qb157/.
+Data Compilation
 
-* All below programes will import **sqldata_notmain.py**, which is a copy of the query from **filterstars.py**.
-Otherwise, run:
-* * **graphcode.py** and it will produce the graph of two particular variables & a particular spectrum at a particular data point.
+* **eqw-newer.py**: this module calculates the continuum, flux and equivalent width for a dictionary of spectral line locations and outputs the data as a pickled file for use in **plotting.py** and **fit_coeffs_new.py** Sample picture: http://postimg.org/image/nniirvr7r/.
+* 
+
+Fitting
+* **analysis.py** has a bunch of functions which allow for the individual inspection of the i-th spectrum. Currently it also plots a 3x3 figure of instances of failures of the above estimation module, e.g. http://postimg.org/image/6o10qb157/.
+* **fit_coeffs_new** fits for the coefficients for an attentuation law involving brightness, HD-EW and extinction_g using a standardized wavelength grid, and generates a covariance matrix (currently investigating accuracy of this) and outputs the files for use in **plotting.py**.
+
+Plotting
+* **plotting.py** plots the coefficients obtained from **fit_coeffs_new.py**, with the possibility of labelling various spectral lines. Sample plot: http://postimg.org/image/gmulxqnov/
 * * **histotriangle.py** which will graph histograms of the variables, using the stars from **filterstars.py** as well as a contour plot of two variables. Sample picture: http://postimg.org/image/s3pdr2dhx/
+
+Currently not used:
 * * **LDA with SQLdata.py** which will take the same stars from **filterstars.py** and apply Linear Discriminant Analysis to them. Right now, the two classes have been arbitrarily assigned and the resulting analysis is meaningless. Sample picture: http://postimg.org/image/7d3d02as5/
+* **plotmanyspectra.py** will sort and plot the ratio of EW's to the median, broken up into 9 quantiles. The effectiveness of the current algorithm is disputed.
+* **classes.py** tries to sort the data by extinction and HD-EW, currently facing same problem as **plotmanyspectra.py**
+
+Notes:
+* sqlcl.py, found in this repository, is required to run the SQL queries on SDSS in **eqw-newer.py**
 
 Explanation of code:
 -------------------
@@ -21,5 +30,4 @@ Explanation of code:
 * **sqlcl.py** : This is a python module necessary for running SQL queries in Python.
 * **sqldata_notmain**: This is imported as a module into **graphcode.py** and contains the query from **filterstars.py**, and essentially prepares the data into arrays.
 
-*Note: I have made the codes that require the sqlcl module import it within the script, so that if you want to run the scripts, simply download sqlcl.py from here and put it in the same folder as the code to run (e.g. sqldata_notmain.py)
 
