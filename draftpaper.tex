@@ -108,6 +108,8 @@ Observed flux = a $\times Brightness + b \times H-\delta  EW + c \times Extincti
  where brightness = 10$^{-0.4 \times (mag_g - 22.5)}$\\
 - The fit was done using the scipy.optimize.leastsq module, which minimizes the sum of squares of the target function (in this case $\sqrt{ivar} \times |f(B,H,E)-flux|).$\\
 - These coefficients were different for each wavelength, and a plot of each coefficient as a function of wavelength was plotted.\\
+- For comparison, the scipy.optimize.curve\_fit module was also used, as this had better documentation regarding the covariance matrix that was generated as part of the fit. The fitted coefficients for curve\_fit were identical to those from leastsq, though the covariance matrices were different.\\
+
 \begin{figure}
 \includegraphics[width=12cm]{../coeffs0}\\
 \caption{Coefficients of brightness as a function of wavelength}
@@ -143,7 +145,12 @@ Observed flux = (a$\times$Brightness + b$\times$H-$\delta$ EW) $\times$ e$^{c \t
 \end{figure}
 
 \section{Discussion}
-
+\subsection{Comparison with existing model (Whittet, Schlegel)}
+- Table 3.1 (Whittet 1992) gives a list of values for A$_\lambda$/A$_V$, while Schlegel lists an A/A$_g$ value of 1.161 for the g-band. Combining the two gives a method to generate A/A$_g$ values, which were plotted against the coefficients obtained from our fit.
+\begin{figure}
+\includegraphics[width=12cm]{../test_curvefit_coefficients2}\\
+\caption{Coefficients of extinction plotted against known values from Whittet and Schlegel}
+\end{figure}
 
 
 \end{document}
