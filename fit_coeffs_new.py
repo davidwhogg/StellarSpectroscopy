@@ -21,23 +21,29 @@ def setplotsize(a,b):
         rcParams['figure.figsize'] = a,b
         
 def deredshiftone(wls, fluxes, zm, badpoints):
-        lamcorb=wls[0]/(1.0-zm)
-        s = UnivariateSpline(wls[0], fluxes[0], k=3, s=0)
-        xs=wls[0]
+        lamcorb=wls/(1.0-zm)
+        s = UnivariateSpline(wls, fluxes, k=3, s=0)
+        xs=wls
         ys=s(lamcorb)
         bady=s(badpoints)
         badx=badpoints
         return xs, ys, badx, bady
 
+def replace_badpix(ivars,tiny):#relies on getdataone() output
+        #(can change)
+        newivars=1.0*ivars
+        for i in range(2,len(ivars)-2):
+                if ivars[i]<tiny:
+                        newivars[i-2:i+3]=0.0
+                
+                else:
+                        pass
+        return newivars
+
 
 def getdataone(plate,mjd,fiber):
         
         tabs=[0] #we only get one entry each time, we overwrite each time
-        fluxes=[0]
-        sn2s=[0]
-        errormags=[0]
-        wls=[0]
-        ivars=[0]
         tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(int(plate)).zfill(4)+'-'+str(int(mjd))+'-'+str(int(fiber)).zfill(4)+'.fits')
         #print "tab success", i
         tabs[0]=tab
@@ -46,26 +52,20 @@ def getdataone(plate,mjd,fiber):
         zm= tabs[0][2].data.field("Z") #redshift
         #zm= tabs[0][2].data.field("Z_NOQSO")
 
-        flux=tabs[0][1].data.field(0) #flux
-        fluxes[0]=flux
+        fluxes=tabs[0][1].data.field(0) #flux
+        
         loglam=tabs[0][1].data.field(1)
-        ivar=tabs[0][1].data.field(2)
-        ivars[0]=ivar
+        ivars=tabs[0][1].data.field(2)
 
         loglam=np.array(loglam)
-        lam=10**loglam
-        lamcor=zeros(len(lam))
+        wls=10**loglam
+        sn2s=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
 
-        wls[0]=lam
-        sn2=tabs[j][2].data.field(6)[0]+tabs[j][2].data.field(7)[0] #one of these entries is 0 always
-        sn2s[0]=sn2
-        errormag=1/sn2
-        errormags[0]=errormag
         badpoints=[]
-        for v in range(len(ivars[0])):
-                if ivars[0][v]==0:
+        for v in range(len(ivars)):
+                if ivars[v]==0:
                     #ivars[0][v]=np.inf
-                    badpoints.append(wls[0][v])
+                    badpoints.append(wls[v])
         del tab[0].data #free up memoery
         tab.close()
         return wls, fluxes, sn2s, ivars, badpoints, zm
@@ -115,9 +115,9 @@ if __name__=="__main__":
     #wls_ideal is now my ideal rest wl grid
     wls_ideal, fluxes, sn2s, ivars, badpoints, zm = getdataone(plates[0],mjds[0],fibers[0])
     xs, ys, badx, bady = deredshiftone(wls_ideal, fluxes, zm, badpoints)
-    b=(wls_ideal[0]>3900)
-    c=(wls_ideal[0]<9175)
-    wls_ideal = np.trim_zeros(c*b*wls_ideal[0])
+    b=(wls_ideal>3900)
+    c=(wls_ideal<9175)
+    wls_ideal = np.trim_zeros(c*b*wls_ideal)
 
     
     #Standardize flux array length
@@ -133,12 +133,13 @@ if __name__=="__main__":
         mjd=mjds[i]
         fiber=fibers[i]
         wls, fluxes, sn2s, ivars, badpoints, zm = getdataone(plate,mjd,fiber)
+        ivars=replace_badpix(ivars,0.000001)
         xs, ys, badx, bady = deredshiftone(wls, fluxes, zm, badpoints)
-        b=(wls[0]>3900)
-        c=(wls[0]<9175)
-        wls_used = np.trim_zeros(c*b*wls[0])
+        b=(wls>3900)
+        c=(wls<9175)
+        wls_used = np.trim_zeros(c*b*wls)
         flux_used = np.trim_zeros(c*b*ys)
-        ivars_tran = np.trim_zeros(c*b*(ivars[0]+1))
+        ivars_tran = np.trim_zeros(c*b*(ivars+1))
         ivars_used=ivars_tran-1
         differences = abs(wls_ideal - wls_used[0]) #wls_used[0] is also min(wls_used)
         differences2 = abs(wls_ideal - wls_used[-1])
@@ -198,13 +199,13 @@ if __name__=="__main__":
     errors=np.array([b_errors,hdew_errors,ext_errors])
     errors2=np.array([b_errors2,hdew_errors2,ext_errors2])
     #Save errors to file
-    h=open("fitted_errors_leastsq","wb")
+    h=open("fitted_errors_leastsq_ivar","wb")
     pickle.dump(errors,h)
     h.close()
-    h=open("fitted_errors_curvefit","wb")
+    h=open("fitted_errors_curvefit_ivar","wb")
     pickle.dump(errors2,h)
     h.close()
-
+    
     #group coefficients by type
     coeffs_unravel=store_values.ravel()
     coeffs=np.reshape(coeffs_unravel,(3,-1),'F')
@@ -212,10 +213,10 @@ if __name__=="__main__":
     coeffs_unravel2=store_popt.ravel()
     coeffs2=np.reshape(coeffs_unravel2,(3,-1),'F')
     
-    h=open("fitted_coefficients_leastsq","wb")
+    h=open("fitted_coefficients_leastsq_ivar","wb")
     pickle.dump(coeffs,h)
     h.close()
-    h=open("fitted_coefficients_curvefit","wb")
+    h=open("fitted_coefficients_curvefit_ivar","wb")
     pickle.dump(coeffs2,h)
     h.close()
     
