@@ -47,9 +47,17 @@ def setplotsize(a,b):
 knownwls=np.array(  [1000, 1050, 1110, 1180, 1250, 1390, 1490, 1600, 1700, 1800, 1900, 2000, 2100, 2190, 2300, 2400, 2500, 2740, 3440, 4000, 4400, 5500, 7000, 9000, 12500, 16500, 22200, 35000, 48000])
 knownal_av=np.array([4.70, 4.21, 3.77, 3.44, 3.15, 2.77, 2.66, 2.59, 2.56, 2.52, 2.61, 2.81, 3.04, 3.15, 2.89, 2.61, 2.37, 2.02, 1.59, 1.43, 1.33, 1.00, 0.74, 0.48, 0.26,  0.15,  0.09,  0.04,  0.02]) #a_L/a_V
 ag_av=1.161 #from Schlegel et. al, 1998, ApJ, \
+
+# these numbers are typed in from Cardelli et al., 1989,
+# "The relationship between infrared, optical, and ultraviolet extinction." ApJ 345, p. 245-256.
+knownwls2=np.array(  [1250,  1500,   1800,  2175, 2500,  3125,  3600, 4400,   5500,  7000,  9000,  12500, 16000, 22000, 34000])
+#using R_v=3.1:
+knownal_av2=np.array([3.339, 2.667, 2.521, 3.191, 2.317, 1.758, 1.569, 1.337, 1.000, 0.751, 0.479, 0.282, 0.190, 0.114, 0.056])
 #Maps of Dust IR Emission for Use in Estimation of Reddening and CMBR Foregrounds
 ## a_L/a_V / a_g/a_v = a_L/a_g
 theoretical_ag = knownal_av/ag_av
+theoretical_ag2=knownal_av2/ag_av
+
 wls_ideal, coeffs, coeffs2, errors, errors2 = importdata()
 
 
@@ -58,7 +66,6 @@ def plot_coefficients(i, dibs=True, balmer=True):
         s=make_spline(i, wls_ideal, coeffs2)
         setplotsize(10,5)
         median=abs(np.median(coeffs2[i]))
-
         plt.figure()
         if i ==0:
                 plt.title("Coefficient of brightness recentered")
@@ -86,13 +93,13 @@ def plot_coefficients(i, dibs=True, balmer=True):
         if balmer==True:
                 #label Balmer lines
                 balmer=np.array([6563,4861,4341,4102])
-                minus=np.array([0.2,0.2,0.2,0.2])*median #space between arrow and curve
-                minus2=np.array([0.2,0.2,0.2,0.2])*median #space between text and arrow
+                minus=np.array([0.05,0.05,0.05,0.05])*median #space between arrow and curve
+                minus2=np.array([0.2,0.2,0.3,0.2])*median #space between text and arrow
 
                 for m in range(len(balmer)):
                         sort=abs(wls_ideal-balmer[m])
                         index=nonzero((sort==min(sort)))[0][0]
-                        print coeffs2[i][index]
+                        
                         #plt.axvline(x=balmer[m], c='gray', lw=0.3)
                         plt.annotate(str(balmer[m]), xy=(balmer[m],coeffs2[i][index]-minus[m]), xycoords='data',
                                   xytext=(balmer[m],coeffs2[i][index]-minus2[m]),
@@ -103,9 +110,11 @@ def plot_coefficients(i, dibs=True, balmer=True):
         plt.plot(wls_ideal,errors2[i],'k')
         plt.plot(knownwls,theoretical_ag,'k',linestyle='dashed',marker='o'\
              ,label="Theory from Schlegel/Whittet")
+        plt.plot(knownwls2,theoretical_ag2,'k',linestyle='dotted',marker='s'\
+                 ,label="Theory from Cardelli et al.")
         plt.legend(loc=0)
         
-        plt.ylim(min(-0.2*median,-0.1),max(0.1,2.2*median))
+        plt.ylim(min(-0.2*median,min(coeffs[i])),max(2.2*median,max(coeffs[i])))
         plt.xlim(3700,9500)
         plt.axhline(y=0,c='k',lw=0.1)
         plt.savefig("test_curvefit_coefficients_ivar"+str(i))
