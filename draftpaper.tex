@@ -100,15 +100,17 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 \caption{Noted failures: varying reasons lead to an overestimate of the flux and consequentially, equivalent width. The main sources are (1) a sudden jump in flux values; (2) a particularly noisy spectrum which leads to a lot of flux from the wings being included; (3) the continuum being not very flat which means more there is more flux between the continuum line and spectrum.}
 \end{figure}
 
-\subsection{Fitting flux as a linear function of H-$\delta$-EW, Extinction and Brightness}
+\subsection{Fitting flux as a linear function of H-$\delta$ EW, Extinction and Brightness}
 - At each particular wavelength, all the flux, H-delta EW, extinction (g), and g-band magnitude were collected. \\
 - A linear model was fitted to find three coefficients:\\
-Observed flux = a $\times Brightness + b \times H-\delta  EW + c \times Extinction$
+Observed flux = a $\times$ Brightness + b $\times$ H-$\delta$  EW + c $\times$ Extinction
 
  where brightness = 10$^{-0.4 \times (mag_g - 22.5)}$\\
-- The fit was done using the scipy.optimize.leastsq module, which minimizes the sum of squares of the target function (in this case $\sqrt{ivar} \times |f(B,H,E)-flux|).$\\
+- The fit was done using the scipy.optimize.curve\_fit module, which minimizes the sum of squares of the target function (in this case $\sqrt{ivar}$ $\times$ $|f(B,H,E)-flux|$).
+\\
 - These coefficients were different for each wavelength, and a plot of each coefficient as a function of wavelength was plotted.\\
-- For comparison, the scipy.optimize.curve\_fit module was also used, as this had better documentation regarding the covariance matrix that was generated as part of the fit. The fitted coefficients for curve\_fit were identical to those from leastsq, though the covariance matrices were different.\\
+- The square root of the main diagonal of the covariance matrix of the fitted parameters is used as the error for the fits. These are stored via the pickle module.\\
+- The Balmer lines, known DIBs and telluric lines were plotted as well to see if these affected the fit.
 
 \begin{figure}
 \includegraphics[width=12cm]{../coeffs0}\\
