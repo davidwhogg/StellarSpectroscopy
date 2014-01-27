@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import pickle
 import scipy.interpolate
+import pyfits
 
 os.chdir("/Users/admin/Desktop/Maser files")
 directory=commands.getoutput("pwd")
@@ -35,6 +36,47 @@ def importdata():
         f.close()
         return wls_ideal, coeffs, coeffs2, errors, errors2
 
+f=open("platemjdfiber","rb")
+platemjdfiber=pickle.load(f)
+f.close()
+
+#sorted2 is the output of the SDSS query, sorted into lists
+f=open("sorted3","rb")
+array1=np.array(pickle.load(f))
+f.close()
+
+#datanewdr9 is the output file of eqw_newer with calculated EWs 
+f=open("datanewdr9","rb")
+data=np.array(pickle.load(f))
+f.close()
+
+extg=np.array(array1[1])
+magg=np.array(array1[15])
+bright= 10**(-0.4*(magg-22.5-extg))
+
+dataline=data[0].ravel()
+datasort=np.reshape(dataline,(10,-1),order='F')
+hdew=datasort[4]
+
+hdewid=np.argsort(hdew)
+brightid=np.argsort(bright)
+#ext,hdew,bright
+ids=[hdewid,brightid]
+plates=[3961,2547,2452,4764,3239,1378]
+mjds=[55654,53917,54178,55646,54888,53061]
+fibers=[956,401,444,794,19,63]
+
+##sort for each i
+'''
+for i in range(2):
+        p=platemjdfiber*1.0
+        for k in range(len(hdewid)):
+                p[0][k]=platemjdfiber[0][ids[i][k]]
+        print p[0][1000], p[0][10000]'''
+
+
+
+
 def make_spline(i, wls_ideal, coefficients):
         s=scipy.interpolate.UnivariateSpline(wls_ideal, coeffs2[i], w=None, bbox=[None, None], k=3, s=None)
         return s
@@ -59,10 +101,59 @@ theoretical_ag = knownal_av/ag_av
 theoretical_ag2=knownal_av2/ag_av
 
 wls_ideal, coeffs, coeffs2, errors, errors2 = importdata()
+def getdata(plate,mjd,fiber): #plate/mjd/fiber are lists with at least (b-a) entries
+
+        tabs=[] #this will contain each fits file in one super-array
+        fluxes=[]
+        errormags=[]
+        wls=[]
+
+    ### use this by default
+        plateid=plate
+        mjdid=mjd
+        fiberid=fiber
+        
+        tab = pyfits.open(commands.getoutput("pwd")+'/FITS_files/spec-'+str(plateid).zfill(4)+'-'+str(mjdid)+'-'+str(fiberid).zfill(4)+'.fits')
+        #tabs.append(tab)
+        if type(tab[2].data.field(63)[0])==float32: #distinguish SDSS,BOSS
+            zm= tab[2].data.field(63)[0] #redshift
+        elif type(tab[2].data.field(37)[0])==float32:
+            zm= tab[2].data.field(37)[0]
+        else:
+            print "error"
+            
+        flux=tab[1].data.field(0) #flux
+        fluxes.append(flux)
+        loglam=tab[1].data.field(1)
+        loglam=np.array(loglam)
+        lam=10**loglam         
+            
+        wls.append(lam)
+
+        tab.close()
+        return wls, fluxes, zm
 
 
+def plot_spectrum(plate,mjd,fiber):
+        setplotsize(10,5)
+        wls, fluxes, zm = getdata(plate,mjd,fiber)
+        plt.plot(wls[0],fluxes[0],'k')
+        plt.title("Spectrum of "+str(plate)+"-"+str(mjd)+"-"+str(fiber))
+        plt.xlabel("Wavelengths, A")
+        plt.ylabel("Flux")
+        plt.xlim(3700,9500)
+
+
+for i in range(6):
+        plate=plates[i]
+        mjd=mjds[i]
+        fiber=fibers[i]
+        plot_spectrum(plate,mjd,fiber)
+        plt.savefig("plot"+str(i))
+        plt.clf()
+sys.exit()
 #Plot coefficients. i=0 is brightness, i=1 is H-D EW, i=2 is ext
-def plot_coefficients(i, dibs=True, balmer=True):
+def plot_coefficients(i, dibs=True, telluric=True, balmer=True):
         s=make_spline(i, wls_ideal, coeffs2)
         setplotsize(10,5)
         median=abs(np.median(coeffs2[i]))
@@ -79,22 +170,37 @@ def plot_coefficients(i, dibs=True, balmer=True):
         #dibs=np.array([4430,5449,6284,5780,5778,4727,5382,5535,6177,6005,6590,6613,7224])
         if dibs==True:
                 #label dibs
-                plus2=np.array([0.2, 0.3,  0.2,  0.25, 0.2,  0.2,  0.2])*median
+                plus2=np.array([0.4, 0.4,  0.4,  0.45, 0.4,  0.4,  0.4])*median
                 dibs=np.array([4430, 5449, 6284, 5780, 4727, 6613, 7224])
                 for k in range(len(dibs)):
                         #plt.axvline(x=dibs[k], c='b', lw=0.3)
-                        plt.annotate(str(dibs[k]), xy=(dibs[k],s(dibs[k])), xycoords='data',
+                        plt.annotate(str(dibs[k]), xy=(dibs[k],s(dibs[k])+.1*median), xycoords='data',
                           xytext=(dibs[k],s(dibs[k])+plus2[k]),
                           va="bottom", ha="center",
-                          bbox=dict(boxstyle="round", fc="w"),
-                          arrowprops=dict(arrowstyle="->"))
+                          bbox=dict(boxstyle="round", fc="w", ec='0.5'),
+                          arrowprops=dict(arrowstyle="->",color='0.5'),color='0.5')
         else:
                 pass
+        if telluric==True:
+                telluric=np.array([4665, 4669, 5461, 5577, 5683, 5893, 6154, 6161, 6300, 6863, 8190, 8465, 8827, 8919])
+                minus=np.array([0.1]*len(telluric))*median #space between arrow and curve
+                minus2=np.array([0.4]*len(telluric))*median #space between text and arrow
+                for l in range(len(telluric)):
+
+                        #plt.axvline(x=telluric[l], c='b', lw=0.3)
+                        plt.annotate(str(telluric[l]), xy=(telluric[l],s(telluric[l])-minus[l]), xycoords='data',
+                          xytext=(telluric[l],s(telluric[l])-minus2[l]),
+                          va="bottom", ha="center",
+                          bbox=dict(boxstyle="round", fc="w", ec='0.5'),
+                          arrowprops=dict(arrowstyle="->",color='0.5'),color='0.5')
+        else:
+                pass
+        
         if balmer==True:
                 #label Balmer lines
                 balmer=np.array([6563,4861,4341,4102])
-                minus=np.array([0.05,0.05,0.05,0.05])*median #space between arrow and curve
-                minus2=np.array([0.2,0.2,0.3,0.2])*median #space between text and arrow
+                minus=np.array([0.1,0.1,0.1,0.1])*median #space between arrow and curve
+                minus2=np.array([0.4,0.4,0.5,0.4])*median #space between text and arrow
 
                 for m in range(len(balmer)):
                         sort=abs(wls_ideal-balmer[m])
@@ -104,10 +210,12 @@ def plot_coefficients(i, dibs=True, balmer=True):
                         plt.annotate(str(balmer[m]), xy=(balmer[m],coeffs2[i][index]-minus[m]), xycoords='data',
                                   xytext=(balmer[m],coeffs2[i][index]-minus2[m]),
                                   va="top", ha="center",
-                                  bbox=dict(boxstyle="round", fc="w"),
-                                  arrowprops=dict(arrowstyle="->"))
+                                  bbox=dict(boxstyle="round", fc="w", ec='0.5'),
+                                  arrowprops=dict(arrowstyle="->",color='0.5'),color='0.5')
+        else:
+                pass
                           
-        plt.plot(wls_ideal,errors2[i],'k')
+        plt.plot(wls_ideal,errors2[i],'0.5')
         plt.plot(knownwls,theoretical_ag,'k',linestyle='dashed',marker='o'\
              ,label="Theory from Schlegel/Whittet")
         plt.plot(knownwls2,theoretical_ag2,'k',linestyle='dotted',marker='s'\
@@ -116,11 +224,12 @@ def plot_coefficients(i, dibs=True, balmer=True):
         
         plt.ylim(min(-0.2*median,min(coeffs[i])),max(2.2*median,max(coeffs[i])))
         plt.xlim(3700,9500)
-        plt.axhline(y=0,c='k',lw=0.1)
+        plt.axhline(y=0,c='0.5',lw=0.4)
         plt.savefig("test_curvefit_coefficients_ivar"+str(i))
         #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
         plt.clf()
         return
+plot_coefficients(2, dibs=True, telluric=True, balmer=True)
 
 #Plot coefficients with error as subplot
 '''for i in range(2,3):
