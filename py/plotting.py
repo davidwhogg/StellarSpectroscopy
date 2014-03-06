@@ -151,7 +151,7 @@ for i in range(6):
         plot_spectrum(plate,mjd,fiber)
         plt.savefig("plot"+str(i))
         plt.clf()
-sys.exit()
+
 #Plot coefficients. i=0 is brightness, i=1 is H-D EW, i=2 is ext
 def plot_coefficients(i, dibs=True, telluric=True, balmer=True):
         s=make_spline(i, wls_ideal, coeffs2)
@@ -171,7 +171,7 @@ def plot_coefficients(i, dibs=True, telluric=True, balmer=True):
         if dibs==True:
                 #label dibs
                 plus2=np.array([0.4, 0.4,  0.4,  0.45, 0.4,  0.4,  0.4])*median
-                dibs=np.array([4430, 5449, 6284, 5780, 4727, 6613, 7224])
+                dibs=np.array([4430, 6284, 5780, 4727])
                 for k in range(len(dibs)):
                         #plt.axvline(x=dibs[k], c='b', lw=0.3)
                         plt.annotate(str(dibs[k]), xy=(dibs[k],s(dibs[k])+.1*median), xycoords='data',
@@ -182,14 +182,15 @@ def plot_coefficients(i, dibs=True, telluric=True, balmer=True):
         else:
                 pass
         if telluric==True:
-                telluric=np.array([4665, 4669, 5461, 5577, 5683, 5893, 6154, 6161, 6300, 6863, 8190, 8465, 8827, 8919])
+                telluric=np.array([3934, 3970, 4227, 5169, 5184, 5804, 5577, 5893, 6154, 6300, 7662, 8134, 8163, 8545, 8465, 8665, 8827, 8919])
                 minus=np.array([0.1]*len(telluric))*median #space between arrow and curve
                 minus2=np.array([0.4]*len(telluric))*median #space between text and arrow
                 for l in range(len(telluric)):
-
+                        sort2=abs(wls_ideal-telluric[l])
+                        index2=nonzero((sort2==min(sort2)))[0][0]
                         #plt.axvline(x=telluric[l], c='b', lw=0.3)
-                        plt.annotate(str(telluric[l]), xy=(telluric[l],s(telluric[l])-minus[l]), xycoords='data',
-                          xytext=(telluric[l],s(telluric[l])-minus2[l]),
+                        plt.annotate(str(telluric[l]), xy=(telluric[l],coeffs[i][index2]-minus[l]), xycoords='data',
+                          xytext=(telluric[l],coeffs2[i][index2]-minus2[l]),
                           va="bottom", ha="center",
                           bbox=dict(boxstyle="round", fc="w", ec='0.5'),
                           arrowprops=dict(arrowstyle="->",color='0.5'),color='0.5')
@@ -226,7 +227,7 @@ def plot_coefficients(i, dibs=True, telluric=True, balmer=True):
         plt.xlim(3700,9500)
         plt.axhline(y=0,c='0.5',lw=0.4)
         plt.savefig("test_curvefit_coefficients_ivar"+str(i))
-        #plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
+        plt.savefig("coeffsdr9experr_newbright_lines_expand_restack"+str(i))
         plt.clf()
         return
 plot_coefficients(2, dibs=True, telluric=True, balmer=True)
