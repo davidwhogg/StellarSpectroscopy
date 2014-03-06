@@ -71,12 +71,12 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 \subsection{Redshift correction}
 - The wavelengths were corrected for redshift using the value recorded from HDU2 (copy of SpecObj table from SDSS).\\
 \begin{figure}
-\includegraphics[width=8cm]{../splines_correct}\\
+\includegraphics[width=8cm]{splines_correct}\\
 \caption{Red line shows redshift correction; blue shows the reversed correction.}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=8cm]{../035}\includegraphics[width=8cm]{../355}\\
+\includegraphics[width=8cm]{035}\includegraphics[width=8cm]{355}\\
 \caption{The recorded continuum values in GalSpecLine seem to be only valid for high (above 0.25) extinction values.}
 \end{figure}
 
@@ -91,15 +91,15 @@ AND s.elodieTEff!=0 AND s.elodieFeH!=0 AND s.elodieLogG!=0
 - The flux is numerically integrated over this 20$\AA$ range, using the trapezium rule with a step size of  $\frac{max(\lambda)-min(\lambda)}{10*n(\lambda)}$, and the ratio of flux/continuum gives the equivalent width value.\\
 - Each calculation gives an output of a list [continuum, continuum error, flux, flux error, equivalent width, extinction$_g$, plate, mjd, fiber]. This is repeated for all the relevant peaks for each spectra; then this is repeated for all the absorption lines used and collected into one array. This array is sorted first by spectral line then by spectra. It can also be stored in a binary text file using the "pickle" module. \\
 \begin{figure}
-\includegraphics[width=8cm]{../workingexample}\\
+\includegraphics[width=8cm]{workingexample}\\
 \caption{This shows the continuum and equivalent-width estimation. The green lines are each 10$\AA$  away from the central blue line. The blue lines in the extreme left and right are defined at 4761$\AA$ and 4962$\AA$  respectively. The shaded gray area is the flux and the black horizontal line is the continuum.}
 \end{figure}
 \begin{figure}
-\includegraphics[width=10cm]{../success_labeled}\\
+\includegraphics[width=10cm]{success_labeled}\\
 \caption{Example calculations for spectra.}
 \end{figure}
 \begin{figure}
-\includegraphics[width=8cm]{../failb_labeled}\\
+\includegraphics[width=8cm]{failb_labeled}\\
 \caption{Noted failures: varying reasons lead to an overestimate of the flux and consequentially, equivalent width. The main sources are (1) a sudden jump in flux values; (2) a particularly noisy spectrum which leads to a lot of flux from the wings being included; (3) the continuum being not very flat which means more there is more flux between the continuum line and spectrum.}
 \end{figure}
 
@@ -116,19 +116,19 @@ Observed flux = a $\times$ Brightness + b $\times$ H-$\delta$  EW + c $\times$ E
 - The Balmer lines, known DIBs and telluric lines were plotted as well to see if these affected the fit.
 
 \begin{figure}
-\includegraphics[width=12cm]{../coeffs0}\\
+\includegraphics[width=12cm]{coeffs0}\\
 \caption{Coefficients of brightness as a function of wavelength}
 \end{figure}
 \begin{figure}
-\includegraphics[width=12cm]{../coeffs1}\\
+\includegraphics[width=12cm]{coeffs1}\\
 \caption{Coefficients of H-$\delta$ as a function of wavelength}
 \end{figure}
 \begin{figure}
-\includegraphics[width=12cm]{../coeffs2}\\
+\includegraphics[width=12cm]{coeffs2}\\
 \caption{Coefficients of extinction as a function of wavelength}
 \end{figure}
 \begin{figure}
-\plottwo{../residuals8000.png}{../residuals.png}
+\plottwo{residuals8000.png}{residuals.png}
 \caption{Plot of expected flux values using the coefficients, and the actual flux values at 8000$\AA$.}
 \end{figure}
 
@@ -137,15 +137,15 @@ Observed flux = a $\times$ Brightness + b $\times$ H-$\delta$  EW + c $\times$ E
 Observed flux = (a$\times$Brightness + b$\times$H-$\delta$ EW) $\times$ e$^{c \times Extinction}$\\
 - This linearized the extinction variable.
 \begin{figure}
-\includegraphics[width=12cm]{../coeffsdr9experr0}\\
+\includegraphics[width=12cm]{coeffsdr9experr0}\\
 \caption{Coefficients of brightness as a function of wavelength}
 \end{figure}
 \begin{figure}
-\includegraphics[width=12cm]{../coeffsdr9experr1}\\
+\includegraphics[width=12cm]{coeffsdr9experr1}\\
 \caption{Coefficients of H-$\delta$ as a function of wavelength}
 \end{figure}
 \begin{figure}
-\includegraphics[width=12cm]{../coeffsdr9experr2}\\
+\includegraphics[width=12cm]{coeffsdr9experr2}\\
 \caption{Coefficients of extinction as a function of wavelength}
 \end{figure}
 
@@ -153,7 +153,7 @@ Observed flux = (a$\times$Brightness + b$\times$H-$\delta$ EW) $\times$ e$^{c \t
 \subsection{Comparison with existing model (Whittet, Schlegel)}
 - Table 3.1 (Whittet 1992) gives a list of values for A$_\lambda$/A$_V$, while Schlegel lists an A/A$_g$ value of 1.161 for the g-band. Combining the two gives a method to generate A/A$_g$ values, which were plotted against the coefficients obtained from our fit.
 \begin{figure}
-\includegraphics[width=12cm]{../test_curvefit_coefficients_ivar2}\\
+\includegraphics[width=12cm]{test_curvefit_coefficients_ivar2}\\
 \caption{Coefficients of extinction plotted against known values from Whittet and Schlegel and Cardelli et al.}
 \end{figure}
 
